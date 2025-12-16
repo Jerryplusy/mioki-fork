@@ -1,0 +1,33 @@
+{
+  "name": "mioki",
+  "type": "module",
+  "packageManager": "pnpm@10.26.0",
+  "description": "A simple NapCat OneBot v11 framework.",
+  "keywords": [
+    "onebot",
+    "onebot v11",
+    "framework",
+    "bot"
+  ],
+  "scripts": {
+    "dev": "tsdown -w",
+    "build": "tsdown"
+  },
+  "exports": {
+    ".": {
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "author": "Viki <hi@viki.moe> (https://github.com/vikiboss)",
+  "license": "MIT",
+  "dependencies": {
+    "napcat-sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "tsdown": "catalog:dev",
+    "typescript": "catalog:dev"
+  }
+}

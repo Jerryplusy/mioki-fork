@@ -1,0 +1,30 @@
+{
+  "name": "napcat-sdk",
+  "type": "module",
+  "packageManager": "pnpm@10.26.0",
+  "description": "A simple SDK for NapCat OneBot v11.",
+  "keywords": [
+    "napcat",
+    "onebot",
+    "onebot v11",
+    "sdk"
+  ],
+  "scripts": {
+    "dev": "tsdown -w",
+    "build": "tsdown"
+  },
+  "exports": {
+    ".": {
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "author": "Viki <hi@viki.moe> (https://github.com/vikiboss)",
+  "license": "MIT",
+  "devDependencies": {
+    "tsdown": "catalog:dev",
+    "typescript": "catalog:dev"
+  }
+}

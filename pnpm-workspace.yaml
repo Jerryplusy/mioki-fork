@@ -1,0 +1,7 @@
+packages:
+  - 'packages/*'
+
+catalogs:
+  dev:
+    tsdown: ^0.18.0
+    typescript: ^5.9.3

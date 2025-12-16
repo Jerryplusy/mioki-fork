@@ -1,0 +1,24 @@
+{
+  "name": "mioki-root",
+  "private": true,
+  "packageManager": "pnpm@10.26.0",
+  "description": "A simple OneBot v11 framework.",
+  "keywords": [
+    "onebot",
+    "onebot v11",
+    "framework",
+    "bot"
+  ],
+  "scripts": {
+    "dev": "pnpm -r run dev",
+    "build": "pnpm -r run build"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "printWidth": 120
+  },
+  "author": "Viki <hi@viki.moe> (https://github.com/vikiboss)",
+  "license": "MIT"
+}
