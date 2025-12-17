@@ -2,6 +2,9 @@
 
 A simple NapCat OneBot v11 framework.
 
+> [!CAUTION]
+> This project is still under active development. Use it at your own risk.
+
 ## Steps to Use mioki
 
 ### 1. Deploy a NapCat Instance
@@ -22,3 +25,5 @@ docker run -d \
 Visit http://localhost:6099， and navigate to "Network Settings" to add a new WebSocket server, using the `3001` port and `0.0.0.0` host. Make sure to enable it after adding.
 
 ![napcat-ws-config](./docs/napcat-ws-config.png)
+
+#### 2. WIP
