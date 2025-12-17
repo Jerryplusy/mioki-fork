@@ -9,7 +9,8 @@ const napcat = new NapCat({
 
 napcat.on('message.private', async (e) => {
   if (e.raw_message === 'hello') {
-    await e.reply(['Hello, Mioki!', napcat.segment.face(175)])
+    const { message_id } = await e.reply(['Hello, Mioki!', napcat.segment.face(175)], true)
+    console.log('message_id', message_id)
   }
 })
 

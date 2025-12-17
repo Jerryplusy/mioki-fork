@@ -3,7 +3,7 @@ import createPino from 'pino'
 import type { Logger } from 'napcat-sdk'
 
 const pino = createPino({
-  level: 'trace',
+  // level: 'trace',
   name: 'mioki',
   transport: {
     target: 'pino-pretty',
