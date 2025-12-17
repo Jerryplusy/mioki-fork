@@ -256,6 +256,9 @@ export class NapCat {
               ? NAPCAT_NOTICE_NOTIFY_MAP[data.sub_type]
               : NAPCAT_NOTICE_EVENT_MAP[data.notice_type]
 
+            data.notice_type = notice_type
+            data.sub_type = sub_type
+
             this.#event.emit(`notice.${notice_type}`, data)
 
             if (sub_type) {
