@@ -71,7 +71,7 @@ export type FlattenData<T extends { type: string }> = T extends { data: infer U 
 export type NormalizedElementToSend = WrapData<SendElement>
 export type Sendable = string | SendElement
 
-export type PostType = 'meta_event' | 'message'
+export type PostType = 'meta_event' | 'message' | 'message_sent' | 'notice' | 'request'
 export type MetaEventType = 'heartbeat' | 'lifecycle'
 export type MessageType = 'private' | 'group'
 
@@ -226,6 +226,10 @@ export const NAPCAT_NOTICE_EVENT_MAP: Record<string, { notice_type: string; sub_
   },
 }
 
+type ToMessageSent<T extends MessageEvent> = Omit<T, 'post_type' | 'group' | 'friend' | 'reply'> & {
+  post_type: 'message_sent'
+}
+
 export interface OneBotEventMap {
   /** 元事件，通常与 OneBot 服务端状态相关 */
   meta_event: MetaEvent
@@ -258,79 +262,89 @@ export interface OneBotEventMap {
   'message.group.normal': GroupMessageEvent
   // 'message.group.notice': GroupMessageEvent
 
-  message_sent: {}
+  message_sent: ToMessageSent<MessageEvent>
 
   /* 发送消息事件 - 私聊消息 */
-  'message_sent.private': {}
+  'message_sent.private': ToMessageSent<PrivateMessageEvent>
   /* 发送消息事件 - 私聊消息 - 好友私聊 */
-  'message_sent.private.friend': {}
+  'message_sent.private.friend': ToMessageSent<PrivateMessageEvent>
   /* 发送消息事件 - 私聊消息 - 群临时会话 */
-  'message_sent.private.group': {}
-  // 'message_sent.private.group_self': {}
-  // 'message_sent.private.other': {}
+  'message_sent.private.group': ToMessageSent<PrivateMessageEvent>
+  // 'message_sent.private.group_self': MessageToMessageSent<PrivateMessageEvent>
+  // 'message_sent.private.other': MessageToMessageSent<PrivateMessageEvent>
 
   /* 发送消息事件 - 群消息 */
-  'message_sent.group': {}
+  'message_sent.group': ToMessageSent<GroupMessageEvent>
   /* 发送消息事件 - 群消息 - 普通消息 */
-  'message_sent.group.normal': {}
-  // 'message.group.notice': {}
+  'message_sent.group.normal': ToMessageSent<GroupMessageEvent>
+  // 'message.group.notice': MessageToMessageSent<GroupMessageEvent>
 
   /** 请求事件 */
-  request: {}
+  request: EventBase<'request', any>
 
   /** 请求事件 - 好友请求 */
-  'request.friend': {}
+  'request.friend': EventBase<'request', any>
 
   /** 请求事件 - 群请求 */
-  'request.group': {}
+  'request.group': EventBase<'request', any>
   /** 请求事件 - 他人加群请求，当机器人是群主或管理员时收到 */
-  'request.group.add': {}
+  'request.group.add': EventBase<'request', any>
   /** 请求事件 - 邀请加群请求，他人邀请机器人加入群时收到 */
-  'request.group.invite': {}
+  'request.group.invite': EventBase<'request', any>
 
   /** 通知事件 */
-  notice: {}
+  notice: EventBase<'notice', any>
 
   /** 通知事件 - 好友相关通知 */
-  'notice.friend': {}
+  'notice.friend': EventBase<'notice', any>
   /** 通知事件 - 好友增加 */
-  'notice.friend.increase': {}
+  'notice.friend.increase': EventBase<'notice', any>
   /** 通知事件 - 好友减少 */
-  'notice.friend.decrease': {}
+  'notice.friend.decrease': EventBase<'notice', any>
   /** 通知事件 - 好友备注变更 */
-  'notice.friend.recall': {}
+  'notice.friend.recall': EventBase<'notice', any>
   /** 通知事件 - 好友戳一戳 */
-  'notice.friend.poke': {}
+  'notice.friend.poke': EventBase<'notice', any>
   /** 通知事件 - 好友点赞 */
-  'notice.friend.like': {}
+  'notice.friend.like': EventBase<'notice', any>
   /** 通知事件 - 好友输入状态 */
-  'notice.friend.input': {}
+  'notice.friend.input': EventBase<'notice', any>
 
-  // 'notice.friend.offline_file': {}
-  // 'notice.client.status': {}
+  // 'notice.friend.offline_file': EventBase<'notice', any>
+  // 'notice.client.status': EventBase<'notice', any>
 
   /** 通知事件 - 群相关通知 */
-  'notice.group': {}
+  'notice.group': EventBase<'notice', any>
   /** 通知事件 - 群成员增加 */
-  'notice.group.increase': {}
+  'notice.group.increase': EventBase<'notice', any>
   /** 通知事件 - 群成员减少 */
-  'notice.group.decrease': {}
+  'notice.group.decrease': EventBase<'notice', any>
   /** 通知事件 - 群管理员变更 */
-  'notice.group.admin': {}
+  'notice.group.admin': EventBase<'notice', any>
   /** 通知事件 - 群成员被禁言 */
-  'notice.group.ban': {}
+  'notice.group.ban': EventBase<'notice', any>
   /** 通知事件 - 群戳一戳 */
-  'notice.group.poke': {}
+  'notice.group.poke': EventBase<'notice', any>
   /** 通知事件 - 群头衔变更 */
-  'notice.group.title': {}
+  'notice.group.title': EventBase<'notice', any>
   /** 通知事件 - 群名片变更 */
-  'notice.group.card': {}
+  'notice.group.card': EventBase<
+    'notice',
+    {
+      notice_type: 'group'
+      sub_type: 'card'
+      group_id: number
+      user_id: number
+      card_new: string
+      card_old: string
+    }
+  >
   /** 通知事件 - 群公告变更 */
-  'notice.group.recall': {}
+  'notice.group.recall': EventBase<'notice', any>
   /** 通知事件 - 群上传文件 */
-  'notice.group.upload': {}
+  'notice.group.upload': EventBase<'notice', any>
   /** 通知事件 - 给群消息添加反应 Reaction */
-  'notice.group.reaction': {}
+  'notice.group.reaction': EventBase<'notice', any>
   /** 通知事件 - 群精华消息变更 */
-  'notice.group.essence': {}
+  'notice.group.essence': EventBase<'notice', any>
 }

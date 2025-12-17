@@ -115,7 +115,7 @@ export class NapCat {
         if (data.retcode === 0) {
           resolve(data.data as T)
         } else {
-          reject(data.message)
+          reject(`Server Error: ${data.message}`)
         }
       }
 
@@ -148,32 +148,32 @@ export class NapCat {
         case 'message': {
           const mid = data.message_id
 
+          if (data.message_type === 'private') {
+            data.friend = {
+              user_id: data.user_id,
+              nickname: data.sender?.nickname,
+              sendMsg: (sendable: Sendable | Sendable[]) => this.sendPrivateMsg(data.user_id, sendable),
+            }
+          } else {
+            data.group = {
+              group_id: data.group_id,
+              group_name: data.group_name,
+              sendMsg: (sendable: Sendable | Sendable[]) => this.sendGroupMsg(data.group_id, sendable),
+            }
+          }
+
+          data.message = (data.message || []).map((el: any) => ({ type: el.type, ...el.data }))
+
           this.#event.emit('message', {
             ...data,
-            ...(data.message_type === 'private'
-              ? {
-                  friend: {
-                    user_id: data.user_id,
-                    nickname: data.sender?.nickname,
-                    sendMsg: (sendable: Sendable | Sendable[]) => this.sendPrivateMsg(data.user_id, sendable),
-                  },
-                }
-              : {
-                  group: {
-                    group_id: data.group_id,
-                    group_name: data.group_name,
-                    sendMsg: (sendable: Sendable | Sendable[]) => this.sendGroupMsg(data.group_id, sendable),
-                  },
-                }),
-            message: data.message.map((e: any) => ({ ...e, ...e.data })),
             reply: (sendable: Sendable | Sendable[], reply = false) => {
-              const normalized = this.#wrapReply(sendable, mid, reply)
+              const wrapped = this.#wrapReply(sendable, mid, reply)
 
               switch (data.message_type) {
                 case 'private':
-                  return this.sendPrivateMsg(data.user_id, normalized)
+                  return this.sendPrivateMsg(data.user_id, wrapped)
                 case 'group':
-                  return this.sendGroupMsg(data.group_id, normalized)
+                  return this.sendGroupMsg(data.group_id, wrapped)
                 default:
                   throw new Error(`unsupported message_type: ${data.message_type}`)
               }
@@ -186,11 +186,6 @@ export class NapCat {
 
               const event = {
                 ...data,
-                friend: {
-                  user_id: data.user_id,
-                  nickname: data.sender?.nickname,
-                  sendMsg: (sendable: Sendable | Sendable[]) => this.sendPrivateMsg(data.user_id, sendable),
-                },
                 reply: (sendable: Sendable | Sendable[], reply = false) =>
                   this.sendPrivateMsg(data.user_id, this.#wrapReply(sendable, mid, reply)),
               }
@@ -206,11 +201,6 @@ export class NapCat {
 
               const event = {
                 ...data,
-                group: {
-                  group_id: data.group_id,
-                  group_name: data.group_name,
-                  sendMsg: (sendable: Sendable | Sendable[]) => this.sendGroupMsg(data.group_id, sendable),
-                },
                 reply: (sendable: Sendable | Sendable[], reply = false) =>
                   this.sendGroupMsg(data.group_id, this.#wrapReply(sendable, mid, reply)),
               }
@@ -250,7 +240,7 @@ export class NapCat {
 
           if (!data.notice_type) {
             this.logger.debug(`received unknown notice type: ${JSON.stringify(data)}`)
-            return
+            break
           }
 
           const isNotify = data.notice_type === 'notify'
@@ -259,15 +249,16 @@ export class NapCat {
             ? NAPCAT_NOTICE_NOTIFY_MAP[data.sub_type]
             : NAPCAT_NOTICE_EVENT_MAP[data.notice_type]
 
-          this.#event.emit('notice', data)
-
           data.notice_type = notice_type
           data.sub_type = sub_type
 
-          this.#event.emit(`notice.${notice_type}`, data)
+          this.#event.emit('notice', data)
 
-          if (sub_type) {
-            this.#event.emit(`notice.${notice_type}.${sub_type}`, data)
+          if (notice_type) {
+            this.#event.emit(`notice.${notice_type}`, data)
+            if (sub_type) {
+              this.#event.emit(`notice.${notice_type}.${sub_type}`, data)
+            }
           }
 
           break
@@ -332,10 +323,10 @@ export class NapCat {
   /**
    * 发送私聊消息
    */
-  sendPrivateMsg<T extends Sendable | Sendable[]>(user_id: number, msg: T) {
+  sendPrivateMsg(user_id: number, sendable: Sendable | Sendable[]) {
     this.#ensureWsConnection(this.#ws)
 
-    this.logger.debug(`sending private message to ${user_id}: ${JSON.stringify(msg)}`)
+    this.logger.debug(`sending private message to ${user_id}: ${JSON.stringify(sendable)}`)
 
     const echo = this.#echoId()
 
@@ -345,7 +336,7 @@ export class NapCat {
         action: 'send_private_msg',
         params: {
           user_id,
-          message: this.#normalizeSendable(msg),
+          message: this.#normalizeSendable(sendable),
         },
       }),
     )
@@ -356,10 +347,10 @@ export class NapCat {
   /**
    * 发送群消息
    */
-  sendGroupMsg<T extends Sendable | Sendable[]>(group_id: number, msg: T) {
+  sendGroupMsg(group_id: number, sendable: Sendable | Sendable[]) {
     this.#ensureWsConnection(this.#ws)
 
-    this.logger.debug(`sending group message to ${group_id}: ${JSON.stringify(msg)}`)
+    this.logger.debug(`sending group message to ${group_id}: ${JSON.stringify(sendable)}`)
 
     const echo = this.#echoId()
 
@@ -369,7 +360,7 @@ export class NapCat {
         action: 'send_group_msg',
         params: {
           group_id,
-          params: { message: this.#normalizeSendable(msg) },
+          message: this.#normalizeSendable(sendable),
         },
       }),
     )
