@@ -1,16 +1,24 @@
-import { NapCat, CONSOLE_LOGGER } from 'napcat-sdk'
+import { NapCat } from 'napcat-sdk'
 
 const napcat = new NapCat({
-  logger: CONSOLE_LOGGER,
   // token for local ws test, it's safe to expose in public
   token: 'cdc93b212524c0c0a0a162f1edec347a',
 })
 
-napcat.on('message.private', async (e) => {
-  if (e.raw_message === 'hello') {
-    const { message_id } = await e.reply(['Hello, Mioki!', napcat.segment.face(175)], true)
-    console.log('message_id', message_id)
-  }
+napcat.on('message', async (e) => {
+  console.log('[message]', JSON.stringify(e))
+})
+
+napcat.on('notice', async (e) => {
+  console.log('[notice]', JSON.stringify(e))
+})
+
+napcat.on('request', async (e) => {
+  console.log('[request]', JSON.stringify(e))
+})
+
+napcat.on('message_sent', async (e) => {
+  console.log('[message_sent]', JSON.stringify(e))
 })
 
 await napcat.bootstrap()

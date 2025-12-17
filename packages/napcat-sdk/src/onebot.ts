@@ -7,7 +7,7 @@ export interface MediaProps {
   file_unique: string
 }
 
-export type RecMessageElement =
+export type RecvElement =
   | { type: 'text'; text: string }
   | { type: 'at'; qq: 'all' | (string & {}) }
   | { type: 'reply'; id: string }
@@ -27,7 +27,7 @@ export type RecMessageElement =
   | { type: 'markdown' }
   | { type: 'lightapp' }
 
-export type NormalizedElement =
+export type SendElement =
   | { type: 'text'; text: string }
   | { type: 'at'; qq: 'all' | (string & {}) | number }
   | { type: 'reply'; id: string }
@@ -55,7 +55,7 @@ export type NormalizedElement =
       type: 'node'
       user_id?: string
       nickname?: string
-    } & ({ id: string } | { content: Exclude<NormalizedElement, { type: 'node' }>[] }))
+    } & ({ id: string } | { content: Exclude<SendElement, { type: 'node' }>[] }))
   | { type: 'json'; data: string }
   | {
       type: 'file'
@@ -68,8 +68,8 @@ export type NormalizedElement =
 export type WrapData<T extends { type: string }> = { type: T['type']; data: Omit<T, 'type'> }
 export type FlattenData<T extends { type: string }> = T extends { data: infer U } ? U & { type: T['type'] } : never
 
-export type NormalizedElementToSend = WrapData<NormalizedElement>
-export type Sendable = string | NormalizedElement
+export type NormalizedElementToSend = WrapData<SendElement>
+export type Sendable = string | SendElement
 
 export type PostType = 'meta_event' | 'message'
 export type MetaEventType = 'heartbeat' | 'lifecycle'
@@ -80,9 +80,20 @@ export type EventBase<T extends PostType, U extends object> = U & { time: number
 export type MetaEventBase<T extends MetaEventType, U extends object> = U &
   EventBase<'meta_event', { meta_event_type: T }>
 
-export type MetaEvent =
-  | MetaEventBase<'heartbeat', { status: { online: boolean; good: boolean }; interval: number }>
-  | MetaEventBase<'lifecycle', { sub_type: 'connect' | 'disconnect' }>
+export type HeartbeatMetaEvent = MetaEventBase<
+  'heartbeat',
+  { status: { online: boolean; good: boolean }; interval: number }
+>
+
+export type LifecycleMetaEvent = MetaEventBase<
+  'lifecycle',
+  {
+    sub_type: 'connect'
+    // sub_type: 'connect' | 'disable' | 'enable'
+  }
+>
+
+export type MetaEvent = HeartbeatMetaEvent | LifecycleMetaEvent
 
 type Reply = (sendable: Sendable | Sendable[], reply?: boolean) => Promise<{ message_id: string }>
 
@@ -95,7 +106,7 @@ export type MessageEventBase<T extends MessageType, U extends object> = U &
       real_id: number
       real_seq: number
       raw_message: string
-      message: RecMessageElement[]
+      message: RecvElement[]
       reply: Reply
     }
   >
@@ -104,9 +115,13 @@ export type PrivateMessageEvent = MessageEventBase<
   'private',
   {
     user_id: number
-    message: string
-    sub_type: 'friend'
+    sub_type: 'friend' | 'group' | 'group_self' | 'other'
     target_id: number
+    friend: {
+      user_id: number
+      nickname: string
+      sendMsg: (sendable: Sendable | Sendable[]) => Promise<{ message_id: string }>
+    }
     sender: {
       user_id: number
       nickname: string
@@ -120,8 +135,12 @@ export type GroupMessageEvent = MessageEventBase<
     group_id: number
     group_name: string
     user_id: number
-    message: string
-    sub_type: 'normal'
+    sub_type: 'normal' | 'notice'
+    group: {
+      group_id: number
+      group_name: string
+      sendMsg: (sendable: Sendable | Sendable[]) => Promise<{ message_id: string }>
+    }
     sender: {
       user_id: number
       nickname: string
@@ -133,9 +152,185 @@ export type GroupMessageEvent = MessageEventBase<
 
 export type MessageEvent = PrivateMessageEvent | GroupMessageEvent
 
+export const NAPCAT_NOTICE_NOTIFY_MAP: Record<string, { notice_type: string; sub_type: string }> = {
+  poke: {
+    notice_type: 'friend',
+    sub_type: 'poke',
+  },
+  input_status: {
+    notice_type: 'friend',
+    sub_type: 'input',
+  },
+  profile_like: {
+    notice_type: 'friend',
+    sub_type: 'like',
+  },
+  title: {
+    notice_type: 'group',
+    sub_type: 'title',
+  },
+}
+
+export const NAPCAT_NOTICE_EVENT_MAP: Record<string, { notice_type: string; sub_type: string }> = {
+  friend_add: {
+    notice_type: 'friend',
+    sub_type: 'increase',
+  },
+  friend_recall: {
+    notice_type: 'friend',
+    sub_type: 'recall',
+  },
+  offline_file: {
+    notice_type: 'friend',
+    sub_type: 'offline_file',
+  },
+  client_status: {
+    notice_type: 'client',
+    sub_type: 'status',
+  },
+  group_admin: {
+    notice_type: 'group',
+    sub_type: 'admin',
+  },
+  group_ban: {
+    notice_type: 'group',
+    sub_type: 'ban',
+  },
+  group_card: {
+    notice_type: 'group',
+    sub_type: 'card',
+  },
+  group_upload: {
+    notice_type: 'group',
+    sub_type: 'upload',
+  },
+  group_decrease: {
+    notice_type: 'group',
+    sub_type: 'decrease',
+  },
+  group_increase: {
+    notice_type: 'group',
+    sub_type: 'increase',
+  },
+  group_msg_emoji_like: {
+    notice_type: 'group',
+    sub_type: 'reaction',
+  },
+  essence: {
+    notice_type: 'group',
+    sub_type: 'essence',
+  },
+  group_recall: {
+    notice_type: 'group',
+    sub_type: 'recall',
+  },
+}
+
 export interface OneBotEventMap {
+  /** 元事件，通常与 OneBot 服务端状态相关 */
   meta_event: MetaEvent
+
+  /** 元事件 - 心跳事件，确认服务端在线状态 */
+  'meta_event.heartbeat': HeartbeatMetaEvent
+
+  /** 元事件 - 生命周期，服务端状态变化 */
+  'meta_event.lifecycle': LifecycleMetaEvent
+  /** 元事件 - 生命周期 - 连接成功 */
+  'meta_event.lifecycle.connect': LifecycleMetaEvent
+  // 'meta_event.lifecycle.disable': LifecycleMetaEvent
+  // 'meta_event.lifecycle.enable': LifecycleMetaEvent
+
+  /** 消息事件，包含私聊和群消息 */
   message: MessageEvent
+
+  /** 消息事件 - 私聊消息 */
   'message.private': PrivateMessageEvent
+  /** 消息事件 - 私聊消息 - 好友私聊 */
+  'message.private.friend': PrivateMessageEvent
+  /** 消息事件 - 私聊消息 - 群临时会话 */
+  'message.private.group': PrivateMessageEvent
+  // 'message.private.group_self': PrivateMessageEvent
+  // 'message.private.other': PrivateMessageEvent
+
+  /** 消息事件 - 群消息 */
   'message.group': GroupMessageEvent
+  /** 消息事件 - 群消息 - 普通消息 */
+  'message.group.normal': GroupMessageEvent
+  // 'message.group.notice': GroupMessageEvent
+
+  message_sent: {}
+
+  /* 发送消息事件 - 私聊消息 */
+  'message_sent.private': {}
+  /* 发送消息事件 - 私聊消息 - 好友私聊 */
+  'message_sent.private.friend': {}
+  /* 发送消息事件 - 私聊消息 - 群临时会话 */
+  'message_sent.private.group': {}
+  // 'message_sent.private.group_self': {}
+  // 'message_sent.private.other': {}
+
+  /* 发送消息事件 - 群消息 */
+  'message_sent.group': {}
+  /* 发送消息事件 - 群消息 - 普通消息 */
+  'message_sent.group.normal': {}
+  // 'message.group.notice': {}
+
+  /** 请求事件 */
+  request: {}
+
+  /** 请求事件 - 好友请求 */
+  'request.friend': {}
+
+  /** 请求事件 - 群请求 */
+  'request.group': {}
+  /** 请求事件 - 他人加群请求，当机器人是群主或管理员时收到 */
+  'request.group.add': {}
+  /** 请求事件 - 邀请加群请求，他人邀请机器人加入群时收到 */
+  'request.group.invite': {}
+
+  /** 通知事件 */
+  notice: {}
+
+  /** 通知事件 - 好友相关通知 */
+  'notice.friend': {}
+  /** 通知事件 - 好友增加 */
+  'notice.friend.increase': {}
+  /** 通知事件 - 好友减少 */
+  'notice.friend.decrease': {}
+  /** 通知事件 - 好友备注变更 */
+  'notice.friend.recall': {}
+  /** 通知事件 - 好友戳一戳 */
+  'notice.friend.poke': {}
+  /** 通知事件 - 好友点赞 */
+  'notice.friend.like': {}
+  /** 通知事件 - 好友输入状态 */
+  'notice.friend.input': {}
+
+  // 'notice.friend.offline_file': {}
+  // 'notice.client.status': {}
+
+  /** 通知事件 - 群相关通知 */
+  'notice.group': {}
+  /** 通知事件 - 群成员增加 */
+  'notice.group.increase': {}
+  /** 通知事件 - 群成员减少 */
+  'notice.group.decrease': {}
+  /** 通知事件 - 群管理员变更 */
+  'notice.group.admin': {}
+  /** 通知事件 - 群成员被禁言 */
+  'notice.group.ban': {}
+  /** 通知事件 - 群戳一戳 */
+  'notice.group.poke': {}
+  /** 通知事件 - 群头衔变更 */
+  'notice.group.title': {}
+  /** 通知事件 - 群名片变更 */
+  'notice.group.card': {}
+  /** 通知事件 - 群公告变更 */
+  'notice.group.recall': {}
+  /** 通知事件 - 群上传文件 */
+  'notice.group.upload': {}
+  /** 通知事件 - 给群消息添加反应 Reaction */
+  'notice.group.reaction': {}
+  /** 通知事件 - 群精华消息变更 */
+  'notice.group.essence': {}
 }
