@@ -14,7 +14,7 @@
   "scripts": {
     "dev": "pnpm -r run dev",
     "build": "pnpm -r run build",
-    "release": "bumpp",
+    "release": "bumpp -r",
     "publish:ci": "node ./scripts/publish-ci.ts"
   },
   "prettier": {
