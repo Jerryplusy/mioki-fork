@@ -10,6 +10,13 @@
     "onebot v11",
     "sdk"
   ],
+  "homepage": "https://github.com/vikiboss/mioki#readme",
+  "files": [
+    "dist"
+  ],
+  "bugs": {
+    "url": "https://github.com/vikiboss/mioki/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vikiboss/mioki.git",
