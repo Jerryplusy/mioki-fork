@@ -3,6 +3,7 @@ import { MIOKI_LOGGER } from './logger.ts'
 
 const napcat = new NapCat({
   logger: MIOKI_LOGGER,
+  // token for local ws test, it's safe to expose in public
   token: 'cdc93b212524c0c0a0a162f1edec347a',
 })
 
