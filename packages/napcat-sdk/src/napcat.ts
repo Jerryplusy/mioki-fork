@@ -9,6 +9,7 @@ import type { Logger } from './logger'
 import {
   NAPCAT_NOTICE_EVENT_MAP,
   NAPCAT_NOTICE_NOTIFY_MAP,
+  type API,
   type NormalizedElementToSend,
   type Sendable,
 } from './onebot'
@@ -329,52 +330,32 @@ export class NapCat {
     this.#event.off(type, handler)
   }
 
+  api<T extends any>(action: API, params: Record<string, any> = {}): Promise<T> {
+    this.#ensureWsConnection(this.#ws)
+    this.logger.debug(`calling api action: ${action} with params: ${JSON.stringify(params)}`)
+    const echo = this.#echoId()
+    this.#ws.send(JSON.stringify({ echo, action, params }))
+    return this.#waitForAction<T>(echo)
+  }
+
   /**
    * 发送私聊消息
    */
   sendPrivateMsg(user_id: number, sendable: Sendable | Sendable[]) {
-    this.#ensureWsConnection(this.#ws)
-
-    this.logger.debug(`sending private message to ${user_id}: ${JSON.stringify(sendable)}`)
-
-    const echo = this.#echoId()
-
-    this.#ws.send(
-      JSON.stringify({
-        echo,
-        action: 'send_private_msg',
-        params: {
-          user_id,
-          message: this.#normalizeSendable(sendable),
-        },
-      }),
-    )
-
-    return this.#waitForAction(echo)
+    return this.api('send_private_msg', {
+      user_id,
+      message: this.#normalizeSendable(sendable),
+    })
   }
 
   /**
    * 发送群消息
    */
   sendGroupMsg(group_id: number, sendable: Sendable | Sendable[]) {
-    this.#ensureWsConnection(this.#ws)
-
-    this.logger.debug(`sending group message to ${group_id}: ${JSON.stringify(sendable)}`)
-
-    const echo = this.#echoId()
-
-    this.#ws.send(
-      JSON.stringify({
-        echo,
-        action: 'send_group_msg',
-        params: {
-          group_id,
-          message: this.#normalizeSendable(sendable),
-        },
-      }),
-    )
-
-    return this.#waitForAction(echo)
+    return this.api('send_group_msg', {
+      group_id,
+      message: this.#normalizeSendable(sendable),
+    })
   }
 
   async bootstrap() {

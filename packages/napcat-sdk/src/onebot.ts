@@ -421,6 +421,61 @@ export interface OneBotEventMap {
   'notice.group.essence': GroupEssenceNoticeEvent
 }
 
+export type OneBotAPI =
+  | 'send_private_msg'
+  | 'send_group_msg'
+  | 'set_qq_profile'
+  | 'set_friend_add_request'
+  | 'get_login_info'
+  | 'get_stranger_info'
+  | 'get_friend_list'
+  | 'delete_friend'
+  | 'get_status'
+
+export type NapCatExtendAPI =
+  | 'set_friend_remark'
+  | 'set_diy_online_status'
+  | 'get_unidirectional_friend_list'
+  | 'get_mini_app_ark'
+  | '_get_model_show'
+  | '_set_model_show'
+  | 'nc_get_user_status'
+  | 'send_like'
+  | 'get_online_clients'
+  | 'get_doubt_friends_add_request'
+  | 'mark_msg_as_read'
+  | 'set_group_sign'
+  | 'group_poke'
+  | 'friend_poke'
+  | 'ArkSharePeer'
+  | 'ArkShareGroup'
+  | 'get_robot_uin_range'
+  | 'set_online_status'
+  | 'get_friends_with_category'
+  | 'set_qq_avatar'
+  | 'get_file'
+  | 'forward_friend_single_msg'
+  | 'forward_group_single_msg'
+  | 'translate_en2zh'
+  | 'set_msg_emoji_like'
+  | 'send_forward_msg'
+  | 'mark_private_msg_as_read'
+  | 'mark_group_msg_as_read'
+  | 'get_friend_msg_history'
+  | 'create_collection'
+  | 'get_collection_list'
+  | 'set_self_longnick'
+  | 'get_recent_contact'
+  | '_mark_all_as_read'
+  | 'get_profile_like'
+  | 'fetch_custom_face'
+  | 'get_ai_record'
+  | 'get_ai_characters'
+  | 'send_group_ai_record'
+  | 'send_poke'
+
+export type API = OneBotAPI | NapCatExtendAPI
+
 export const NAPCAT_NOTICE_NOTIFY_MAP: Record<string, { notice_type: string; sub_type: string }> = {
   input_status: {
     notice_type: 'friend',
