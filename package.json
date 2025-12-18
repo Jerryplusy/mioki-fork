@@ -12,8 +12,8 @@
     "bot"
   ],
   "scripts": {
-    "dev": "pnpm -r run dev",
-    "build": "pnpm -r run build",
+    "dev": "pnpm --parallel --filter './packages/**' run dev",
+    "build": "pnpm --parallel --filter './packages/**' run build",
     "release": "bumpp -r",
     "publish:ci": "node ./scripts/publish-ci.ts"
   },

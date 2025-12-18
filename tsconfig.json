@@ -13,5 +13,5 @@
     "declaration": true,
     "resolveJsonModule": true
   },
-  "exclude": ["tsdown.config.ts"]
+  "exclude": ["**/tsdown.config.ts", "./packages/example"]
 }
