@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { dayjs } from './utils'
-import { BOT_CWD } from './config'
+import { BOT_CWD, botConfig } from './config'
 import { stripAnsi, ColorName, colors } from 'consola/utils'
 import { createConsola, LogLevels, ConsolaInstance } from 'consola/core'
 
@@ -16,6 +16,8 @@ const LEVEL_MAP: Record<number, { name: string; color: ColorName }> = {
   5: { name: 'TRACE', color: 'gray' },
 }
 
+export const logger: ConsolaInstance = getMiokiLogger(botConfig.log_level || 'info')
+
 /**
  * 获取日志文件名
  */
@@ -24,7 +26,7 @@ export function getLogFilePath(type: string = ''): string {
   return path.join(BOT_CWD.value, `logs/${startTime}${type ? '.' + type : ''}.log`)
 }
 
-export const getMiokiLogger = (level: LogLevel): ConsolaInstance => {
+export function getMiokiLogger(level: LogLevel): ConsolaInstance {
   const logDir = path.join(BOT_CWD.value, 'logs')
 
   if (!fs.existsSync(logDir)) {

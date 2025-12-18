@@ -36,6 +36,9 @@ export interface EventMap extends OneBotEventMap {
   'napcat.connected': {
     user_id: number
     nickname: string
+    app_name: string
+    app_version: string
+    protocol_version: string
     ts: number
   }
 }

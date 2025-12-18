@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import nodeCron from 'node-cron'
 import { hrtime } from 'node:process'
+import { colors } from 'consola/utils'
 
 import * as utilsExports from './utils'
 import * as configExports from './config'
@@ -11,7 +12,6 @@ import * as servicesExports from './services'
 import type { EventMap, NapCat } from 'napcat-sdk'
 import type { ScheduledTask, TaskContext } from 'node-cron'
 import type { ConsolaInstance } from 'consola/core'
-import { colors } from 'consola/utils'
 
 type Num = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
@@ -222,7 +222,7 @@ export async function enablePlugin(
           runtimePlugins.delete(name)
         } catch (err: any) {
           throw new Error(
-            `>>> 禁用插件 [${colors.bold(colors.yellow(typeDesc))}]${colors.bold(colors.yellow(name))}@${colors.bold(colors.yellow(version))} 失败: ${err?.message}`,
+            `禁用插件 [${colors.yellow(typeDesc)}]${colors.yellow(`${name}@${version}`)} 失败: ${err?.message}`,
           )
         }
       },
@@ -232,11 +232,11 @@ export async function enablePlugin(
     const time = Math.round(Number(end - start)) / 1_000_000
 
     bot.logger.info(
-      `>>> 启用插件 ${colors.bold(colors.yellow(`[${typeDesc}]`))}${colors.bold(colors.yellow(`${name}@${version}`))} => 耗时 ${colors.bold(colors.green(time.toFixed(2)))} ms`,
+      `启用插件 ${colors.yellow(`[${typeDesc}]`)}${colors.yellow(`${name}@${version}`)} => 耗时 ${colors.green(time.toFixed(2))} ms`,
     )
   } catch (e: any) {
     throw new Error(
-      `>>> 启用插件 ${colors.bold(colors.yellow(`[${typeDesc}]`))}${colors.bold(colors.yellow(`${name}@${version}`))} 失败: ${e?.message}`,
+      `启用插件 ${colors.yellow(`[${typeDesc}]`)}${colors.yellow(`${name}@${version}`)} 失败: ${e?.message}`,
     )
   }
 

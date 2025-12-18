@@ -1,7 +1,8 @@
 import crypto from 'node:crypto'
+import { logger } from './logger'
+import * as utils from './utils'
 import { segment } from 'napcat-sdk'
 import { botConfig } from './config'
-import * as utils from './utils'
 
 import type { NapCat, Sendable } from 'napcat-sdk'
 
@@ -15,12 +16,12 @@ export async function noticeGroups(
   delay = 1000,
 ): Promise<void> {
   if (!bot.isOnline()) {
-    bot.logger.error('发送失败，Bot 不在线')
+    logger.error('发送失败，Bot 不在线')
     return
   }
 
   if (!message) {
-    bot.logger.warn('消息内容为空')
+    logger.warn('消息内容为空')
     return
   }
 
@@ -42,12 +43,12 @@ export async function noticeFriends(
   delay = 1000,
 ): Promise<void> {
   if (!bot.isOnline) {
-    bot.logger.error('发送失败，Bot 不在线')
+    logger.error('发送失败，Bot 不在线')
     return
   }
 
   if (!message) {
-    bot.logger.warn('消息内容为空')
+    logger.warn('消息内容为空')
     return
   }
 
@@ -80,12 +81,12 @@ export async function noticeOwners(bot: NapCat, message?: Sendable | null, delay
  */
 export async function noticeMainOwner(bot: NapCat, message?: Sendable | null): Promise<void> {
   if (!bot.isOnline()) {
-    bot.logger.error('发送失败，Bot 不在线')
+    logger.error('发送失败，Bot 不在线')
     return
   }
 
   if (!message) {
-    bot.logger.warn('消息内容为空')
+    logger.warn('消息内容为空')
     return
   }
 
@@ -152,7 +153,7 @@ export async function runWithErrorHandler(
       try {
         await noticeMainOwner(bot, '发送失败，可能被风控，请检查签名状态。')
       } catch {
-        bot.logger.error('发送失败，可能被风控，请检查签名状态。')
+        logger.error('发送失败，可能被风控，请检查签名状态。')
       }
     }
   }

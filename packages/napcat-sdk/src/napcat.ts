@@ -269,7 +269,7 @@ export class NapCat {
   }
 
   /** 绑定内部事件处理器 */
-  #bindInternalEvents(data: any) {
+  async #bindInternalEvents(data: any) {
     if (data.echo) {
       this.#echoEvent.emit(`echo#${data.echo}`, data)
       return
@@ -289,17 +289,20 @@ export class NapCat {
 
             if (data.sub_type) {
               if (data.sub_type === 'connect') {
-                this.#uin = data.self_id
+                const { app_name, app_version, protocol_version } = await this.getVersionInfo()
+                const { nickname, user_id } = await this.getLoginInfo()
+
                 this.#online = true
+                this.#uin = user_id
+                this.#nickname = nickname
 
-                this.getLoginInfo().then((info) => {
-                  this.#nickname = info.nickname
-
-                  this.#event.emit('napcat.connected', {
-                    user_id: this.#uin,
-                    nickname: this.#nickname,
-                    ts: data.time * 1000,
-                  })
+                this.#event.emit('napcat.connected', {
+                  user_id: this.#uin,
+                  nickname: this.#nickname,
+                  app_name,
+                  app_version,
+                  protocol_version,
+                  ts: data.time * 1000,
                 })
               }
 
@@ -689,7 +692,7 @@ export class NapCat {
         })() as any
 
         if (!data) {
-          this.logger.warn(`received non-json message: ${event.data}`)
+          this.logger.debug(`received non-json message: ${event.data}`)
           return
         }
 
@@ -699,13 +702,13 @@ export class NapCat {
 
       ws.onclose = () => {
         this.#online = false
-        this.logger.info('closed')
+        this.logger.debug('NapCat disconnected')
         this.#event.emit('ws.close')
       }
 
       ws.onerror = (error) => {
         this.#online = false
-        this.logger.error(`error: ${error}`)
+        this.logger.debug(`NapCat error: ${error}`)
         this.#event.emit('ws.error', error)
         reject(error)
       }

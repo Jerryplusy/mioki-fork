@@ -1,1 +1,1 @@
-import('mioki').then(({ start }) => start({ cwd: __dirname }))
+require('mioki').start({ cwd: __dirname })

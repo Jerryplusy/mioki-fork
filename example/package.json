@@ -1,12 +1,11 @@
 {
   "name": "bot",
   "private": true,
-  "type": "module",
   "dependencies": {
     "mioki": "workspace:*"
   },
   "scripts": {
-    "start": "bun app.ts"
+    "start": "node app.ts"
   },
   "mioki": {
     "prefix": "~",
@@ -20,7 +19,7 @@
     ],
     "log_level": "info",
     "plugins_dir": "../plugins",
-    "online_push": true,
+    "online_push": false,
     "napcat": {
       "protocol": "ws",
       "port": 3333,

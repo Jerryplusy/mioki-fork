@@ -6,10 +6,7 @@ export default definePlugin({
   priority: 10, // optional, default is 10
   description: 'A simple hi plugin', // optional
   async setup(ctx) {
-    ctx.logger.info(`bot: ${ctx.bot.uin}, ${ctx.bot.nickname}`)
-
-    const info = await ctx.bot.api<{ user_id: number; nickname: string }>('get_login_info')
-    ctx.logger.info(`bot login info: user_id=${info.user_id}, nickname=${info.nickname}`)
+    // ctx.logger.info(`bot: ${ctx.bot.uin}, ${ctx.bot.nickname}`)
 
     ctx.handle('notice', async (e) => {
       ctx.logger.info(`received a notice: ${JSON.stringify(e)}`)
@@ -18,7 +15,6 @@ export default definePlugin({
     ctx.handle('request.friend', async (e) => {
       ctx.logger.info('收到好友请求：', e.user_id)
       await e.approve()
-      ctx.logger.info('已自动通过好友请求')
     })
 
     ctx.handle('message.group', async (e) => {
@@ -34,10 +30,10 @@ export default definePlugin({
       // const { uin, pskey, skey, bkn, gtk, cookie } = await ctx.getCookie('qzone.qq.com')
     })
 
-    ctx.cron('*/3 * * * * *', (ctx, task) => {
-      ctx.logger.warn(`cron task executed at ${task.date}`)
-      // ctx.bot.sendPrivateMsg(ctx.botConfig.owners[0], 'hi from cron task!')
-    })
+    // ctx.cron('*/3 * * * * *', (ctx, task) => {
+    // ctx.logger.warn(`cron task executed at ${task.date}`)
+    // ctx.bot.sendPrivateMsg(ctx.botConfig.owners[0], 'hi from cron task!')
+    // })
 
     return () => {
       ctx.logger.info('plugin has been cleaned up!')

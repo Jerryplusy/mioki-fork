@@ -6,13 +6,12 @@ import { NapCat } from 'napcat-sdk'
 import { version } from '../package.json'
 import * as utils from './utils'
 import * as actions from './actions'
-import { getMiokiLogger } from './logger'
-import { BUILTIN_PLUGINS } from './builtins'
+import { logger } from './logger'
 import { colors } from 'consola/utils'
+import { BUILTIN_PLUGINS } from './builtins'
 import { enablePlugin, ensurePluginDir, getAbsPluginDir, runtimePlugins } from './plugin'
 
 import type { MiokiPlugin } from './plugin'
-
 export interface StartOptions {
   cwd?: string
 }
@@ -26,46 +25,61 @@ export async function start(options: StartOptions = {}): Promise<void> {
 
   process.title = `mioki v${version}`
 
-  const logger = getMiokiLogger(cfg.botConfig.log_level || 'info')
   const plugin_dir = getAbsPluginDir()
 
-  logger.info(`>>> -> ${colors.bold(colors.cyan('mioki'))} ${colors.bold(colors.green(`v${version}`))} <-`)
-  logger.info(`>>> ${colors.yellow(colors.underline(`基于 NapCat 的 TypeScript 🤖️ 机器人框架。`))}`)
-  logger.info(`>>> ${colors.italic(`作者: Viki <hi@viki.moe> (https://github.com/vikiboss)`)}`)
-  logger.info(`>>> ${colors.italic(`协议: Licensed under MIT License.`)}`)
-  logger.info(`>>> ${colors.cyan(`GitHub: https://github.com/vikiboss/mioki`)}`)
-  logger.info('>>> ----------------------------------------')
-  logger.info(`>>> 工作目录: ${colors.bold(colors.blue(cfg.BOT_CWD.value))}`)
-  logger.info(`>>> 插件目录: ${colors.bold(colors.blue(plugin_dir))}`)
+  logger.info(colors.dim('='.repeat(40)))
+  logger.info(`欢迎使用 ${colors.bold(colors.cyan('mioki'))} ${colors.bold(colors.green(`v${version}`))}`)
+  logger.info(colors.yellow(colors.underline(`一个基于 NapCat 和 TypeScript 的QQ 机器人框架`)))
+  logger.info(colors.cyan(`轻量 * 跨平台 * 体验 * 热重载 * 继承 KiviBot`))
+  logger.info(colors.dim('='.repeat(40)))
+  logger.info(colors.dim(colors.italic(`作者: Viki <hi@viki.moe> (https://github.com/vikiboss)`)))
+  logger.info(colors.dim(colors.italic(`仓库: https://github.com/vikiboss/mioki`)))
+  logger.info(colors.dim(colors.italic(`文档: https://mioki.viki.moe/docs`)))
+  logger.info(colors.dim('='.repeat(40)))
+  logger.info(`${colors.dim('工作目录: ')}${colors.blue(cfg.BOT_CWD.value)}`)
+  logger.info(`${colors.dim('插件目录: ')}${colors.blue(plugin_dir)}`)
+  logger.info(`${colors.dim('配置文件: ')}${colors.blue(`${cfg.BOT_CWD.value}/package.json`)}`)
+  logger.info(colors.dim('='.repeat(40)))
+
+  const { protocol = 'ws', port = 6700, host = 'localhost', token } = cfg.botConfig.napcat || {}
+
+  logger.info(`开始连接 NapCat 实例: ${colors.green(`${protocol}://${host}:${port}`)}`)
 
   const napcat = new NapCat({
-    ...cfg.botConfig.napcat,
+    token,
+    protocol,
+    host,
+    port,
     logger,
   })
 
-  napcat.on('napcat.connected', async ({ user_id, nickname }) => {
-    logger.info(`>>> 已连接到 NapCat: ${colors.bold(colors.green(nickname))}（${colors.bold(colors.green(user_id))}）`)
+  napcat.on('ws.close', () => {
+    logger.error('连接已关闭，请确保 NapCat 实例正常运行及 token 配置正确')
+  })
+
+  napcat.on('napcat.connected', async ({ user_id, nickname, app_name, app_version }) => {
+    logger.info(`已连接到 NapCat 实例: ${colors.green(`${app_name}-v${app_version}-${nickname}(${user_id})`)}`)
 
     let lastNoticeTime = 0
 
     process.on('uncaughtException', async (err: any) => {
       const msg = utils.stringifyError(err)
-      napcat.logger.error(`>>> uncaughtException, 出错了: ${msg}`)
+      napcat.logger.error(`uncaughtException, 出错了: ${msg}`)
       if (Date.now() - lastNoticeTime < 1_000) return
       lastNoticeTime = Date.now()
       await actions.noticeMainOwner(napcat, `mioki 发生未捕获异常:\n\n${msg}`).catch(() => {
-        napcat.logger.error('>>> 发送未捕获异常通知失败')
+        napcat.logger.error('发送未捕获异常通知失败')
       })
     })
 
     process.on('unhandledRejection', async (err: any) => {
       const msg = utils.stringifyError(err)
-      napcat.logger.error(`>>> unhandledRejection, 出错了: ${msg}`)
+      napcat.logger.error(`unhandledRejection, 出错了: ${msg}`)
       if (Date.now() - lastNoticeTime < 1_000) return
       lastNoticeTime = Date.now()
       const date = new Date().toLocaleString()
       await actions.noticeMainOwner(napcat, `【${date}】\n\nmioki 发生未处理异常:\n\n${msg}`).catch(() => {
-        napcat.logger.error('>>> 发送未处理异常通知失败')
+        napcat.logger.error('发送未处理异常通知失败')
       })
     })
 
@@ -75,7 +89,7 @@ export async function start(options: StartOptions = {}): Promise<void> {
       .map((p) => ({ dirName: p, absPath: path.resolve(plugin_dir, p) }))
       .filter((p) => {
         if (!fs.existsSync(p.absPath)) {
-          napcat.logger.warn(`>>> 插件 ${colors.bold(colors.red(p.dirName))} 不存在，已忽略`)
+          napcat.logger.warn(`插件 ${colors.red(p.dirName)} 不存在，已忽略`)
           return false
         }
 
@@ -89,7 +103,7 @@ export async function start(options: StartOptions = {}): Promise<void> {
         const plugin = (await utils.jiti.import(absPath, { default: true })) as MiokiPlugin
 
         if (plugin.name !== dirName) {
-          const tip = `>>> 插件目录名 [${colors.bold(colors.yellow(dirName))}] 和插件声明的 name [${colors.bold(colors.yellow(plugin.name))}] 不一致，可能导致重载异常，请修改一致后重启。`
+          const tip = `插件目录名 [${colors.yellow(dirName)}] 和插件声明的 name [${colors.yellow(plugin.name)}] 不一致，可能导致重载异常，请修改一致后重启。`
           napcat.logger.warn(tip)
           actions.noticeMainOwner(napcat, tip)
         }
@@ -106,7 +120,7 @@ export async function start(options: StartOptions = {}): Promise<void> {
     const sortedUserPlugins = userPlugins.toSorted((prev, next) => (prev.priority ?? 100) - (next.priority ?? 100))
 
     if (failedImportPlugins.length) {
-      const tip = `>>> ${colors.bold(colors.red(failedImportPlugins.length))} 个插件加载失败: \n\n${failedImportPlugins.map(([dirName, err]) => `${dirName}: ${err}`).join('\n\n')}`
+      const tip = `${colors.red(failedImportPlugins.length)} 个插件加载失败: \n\n${failedImportPlugins.map(([dirName, err]) => `${dirName}: ${err}`).join('\n\n')}`
       napcat.logger.warn(tip)
       actions.noticeMainOwner(napcat, tip)
     }
@@ -128,7 +142,7 @@ export async function start(options: StartOptions = {}): Promise<void> {
 
     try {
       // 加载内置插件
-      napcat.logger.info(`>>> 加载内置插件: ${BUILTIN_PLUGINS.map((p) => colors.bold(colors.cyan(p.name))).join(', ')}`)
+      napcat.logger.info(`加载内置插件: ${BUILTIN_PLUGINS.map((p) => colors.cyan(p.name)).join(', ')}`)
       await Promise.all(BUILTIN_PLUGINS.map((p) => enablePlugin(napcat, p, 'builtin')))
 
       // 按优先级分组并行加载用户插件，相同优先级的插件可以并行加载
@@ -146,7 +160,7 @@ export async function start(options: StartOptions = {}): Promise<void> {
     } catch (e: any) {
       napcat.logger.error(e?.message)
       await actions.noticeMainOwner(napcat, e?.message).catch(() => {
-        napcat.logger.error('>>> 发送插件启用失败通知失败')
+        napcat.logger.error('发送插件启用失败通知失败')
       })
     }
 
@@ -156,18 +170,18 @@ export async function start(options: StartOptions = {}): Promise<void> {
 
     const failedInfo =
       failedCount > 0
-        ? `${colors.bold(colors.red(failedCount))} 个失败 (导入 ${colors.bold(colors.red(failedImportPlugins.length))}，启用 ${colors.bold(colors.red(failedEnablePlugins.length))})。`
+        ? `${colors.red(failedCount)} 个失败 (导入 ${colors.red(failedImportPlugins.length)}，启用 ${colors.red(failedEnablePlugins.length)})`
         : ''
 
     napcat.logger.info(
-      `>>> 成功加载了 ${colors.bold(colors.green(runtimePlugins.size))} 个插件。${failedInfo ? failedInfo : ''}总耗时 ${colors.bold(colors.green(costTime.toFixed(2)))} ms`,
+      `成功加载了 ${colors.green(runtimePlugins.size)} 个插件，${failedInfo ? failedInfo : ''}总耗时 ${colors.green(costTime.toFixed(2))} 毫秒`,
     )
 
-    napcat.logger.info(colors.bold(colors.green(`>>> mioki v${version} 启动完成！祝您使用愉快！🎉️`)))
+    napcat.logger.info(colors.green(`mioki v${version} 启动完成，祝您使用愉快 🎉️`))
 
     if (cfg.botConfig.online_push) {
       await actions.noticeMainOwner(napcat, `✅ mioki v${version} 已就绪`).catch((err) => {
-        napcat.logger.error(`>>> 发送就绪通知失败: ${utils.stringifyError(err)}`)
+        napcat.logger.error(`发送就绪通知失败: ${utils.stringifyError(err)}`)
       })
     }
   })

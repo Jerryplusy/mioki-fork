@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { dayjs, isNumber, unique } from './utils'
+import { logger } from './logger'
+import { isNumber, unique } from './utils'
 
 import type { LogLevel } from 'napcat-sdk'
 
@@ -69,7 +70,7 @@ export const updateBotConfig = async (draftFn: (config: MiokiConfig) => any): Pr
 
   writePackageJson(pkg)
 
-  console.log(`>>> 检测到配置变动，已同步至 package.json 文件`)
+  logger.info(`检测到配置变动，已同步至 package.json 文件`)
 }
 
 /**
@@ -77,7 +78,7 @@ export const updateBotConfig = async (draftFn: (config: MiokiConfig) => any): Pr
  */
 export const updateBotCWD = (root: string): void => {
   BOT_CWD.value = root
-  console.log(`>>> 机器人根目录已设置为 ${root}`)
+  logger.info(`机器人根目录已设置为 ${root}`)
 }
 
 /**
@@ -124,11 +125,3 @@ export const hasRight = (id: number | { sender: { user_id: number } } | { user_i
  * 是否在 PM2 中运行
  */
 export const isInPm2: boolean = Boolean('pm_id' in process.env || 'PM2_USAGE' in process.env)
-
-/**
- * 获取日志文件名
- */
-export function getLogFilePath(uin: number, platformName: string): string {
-  const startTime = dayjs().format('YYYY-MM-DD_HH-mm-ss')
-  return path.join(BOT_CWD.value, `logs/${uin}_${platformName}_${startTime}.log`)
-}

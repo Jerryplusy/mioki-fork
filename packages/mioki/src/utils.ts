@@ -27,6 +27,7 @@ export { default as mri } from 'mri'
 export { default as path } from 'node:path'
 export { default as dayjs } from 'dayjs'
 export { default as dedent } from 'dedent'
+export { colors, stripAnsi, box, colorize } from 'consola/utils'
 export { default as systemInfo } from 'systeminformation'
 
 export const ChromeUA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/131.0.0.0'
@@ -560,7 +561,7 @@ export async function getQuoteMessage(
           resolve(cacheMsg)
         } else if (Date.now() - start > timeout) {
           clearInterval(timer)
-          throw new Error(`>>> 获取引用消息超时 ${timeout}, Key: ${key}`)
+          throw new Error(`获取引用消息超时 ${timeout}, Key: ${key}`)
         }
       }, 100)
     })
