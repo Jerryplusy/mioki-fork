@@ -343,7 +343,7 @@ export interface SendNodeContentElement {
   /** 发送者昵称（可选） */
   nickname?: string
   /** 自定义消息内容 */
-  content: Exclude<SendElement, { type: 'node' }>[]
+  content: SendElement[]
 }
 
 /** 发送的合并转发节点消息段 */

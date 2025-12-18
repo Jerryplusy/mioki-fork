@@ -42,6 +42,19 @@ export class NapCat {
   #uin: number = 0
   /** 机器人状态 */
   #online: boolean = false
+  /** Cookies 缓存 */
+  #cookieCache = new Map<
+    string,
+    {
+      uin: number
+      pskey: string
+      skey: string
+      gtk: string
+      bkn: string
+      cookie: string
+      legacyCookie: string
+    }
+  >()
 
   constructor(private readonly options: MiokiOptions) {}
 
@@ -412,16 +425,11 @@ export class NapCat {
     }
   }
 
+  /**
+   * 机器人 QQ 号
+   */
   get uin(): number {
     return this.#uin
-  }
-
-  async getBkn(): Promise<number> {
-    return 0
-  }
-
-  isOnline(): boolean {
-    return this.#ws?.readyState === WebSocket.OPEN && this.#online
   }
 
   /**
@@ -457,6 +465,9 @@ export class NapCat {
     this.#event.off(type, handler)
   }
 
+  /**
+   * 调用 NapCat API
+   */
   api<T extends any>(action: API | (string & {}), params: Record<string, any> = {}): Promise<T> {
     this.#ensureWsConnection(this.#ws)
     this.logger.debug(`calling api action: ${action} with params: ${JSON.stringify(params)}`)
@@ -483,6 +494,83 @@ export class NapCat {
       group_id,
       message: this.#normalizeSendable(sendable),
     })
+  }
+
+  /**
+   * 机器人是否在线
+   */
+  isOnline(): boolean {
+    return this.#ws?.readyState === WebSocket.OPEN && this.#online
+  }
+
+  /**
+   * 计算 GTK 值
+   */
+  getGTk(skey: string): number {
+    let hash = 5381
+    for (let i = 0; i < skey.length; i++) {
+      hash += (hash << 5) + skey.charCodeAt(i)
+    }
+    return hash & 0x7fffffff
+  }
+
+  async getNapCatCookies(domain: string): Promise<{ cookies: string; bkn: string }> {
+    return await this.api<{ cookies: string; bkn: string }>('get_cookies', { domain })
+  }
+
+  /**
+   * 获取 Cookie 相关信息
+   */
+  async getCookie(domain: string): Promise<{
+    uin: number
+    pskey: string
+    skey: string
+    gtk: string
+    bkn: string
+    cookie: string
+    legacyCookie: string
+  }> {
+    const cache = this.#cookieCache.get(domain)
+
+    if (cache) return cache
+
+    const { cookies: cookieString, bkn } = await this.getNapCatCookies(domain)
+
+    const skey = cookieString.match(/skey=([^;]*)/)?.[1] || ''
+    const pskey = cookieString.match(/pskey=([^;]*)/)?.[1] || ''
+    const gtk = this.getGTk(pskey)
+
+    const returns = {
+      pskey,
+      skey,
+      uin: this.uin,
+      gtk: String(gtk),
+      bkn,
+      cookie: `uin=${this.uin}; skey=${skey}; p_uin=${this.uin}; p_skey=${pskey};`,
+      legacyCookie: `uin=o${this.uin}; skey=${skey}; p_uin=o${this.uin}; p_skey=${pskey};`,
+    }
+
+    this.#cookieCache.set(domain, returns)
+
+    // 1 小时后清除缓存
+    setTimeout(
+      () => {
+        this.#cookieCache.delete(domain)
+      },
+      1000 * 60 * 60,
+    )
+
+    return returns
+  }
+
+  async getPskey(domain: string): Promise<string> {
+    const { pskey } = await this.getCookie(domain)
+    return pskey
+  }
+
+  async getBkn(): Promise<number> {
+    const { bkn } = await this.getCookie('vip.qq.com')
+    return Number(bkn)
   }
 
   /** 启动 NapCat SDK 实例，建立 WebSocket 连接 */

@@ -21,6 +21,11 @@ napcat.on('message.group', async (e) => {
   //   return e.reply(`RSS 内存: ${process.memoryUsage().rss / 1024 / 1024} MB`)
   // }
 
+  if (e.raw_message === 'test') {
+    const data = await napcat.api<any>('get_cookies', { domain: 'qzone.qq.com' })
+    console.log('API get_cookies result:', data)
+  }
+
   if (e.quote_id) {
     const quotedMessage = await e.getQuoteMessage()
     console.log('Quoted message content:', quotedMessage)

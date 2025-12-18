@@ -1,15 +1,10 @@
 import crypto from 'node:crypto'
+import { segment } from 'napcat-sdk'
 import { botConfig } from './config'
 import * as utils from './utils'
 
 import type { NapCat, Sendable } from 'napcat-sdk'
 
-/**
- * 是否是自身的消息，当开启 ignore_self: false 时，可用于忽略自己的消息
- */
-export function isBot(bot: NapCat, id: number | { sender: { user_id: number } } | { user_id: number }): boolean {
-  return utils.isNumber(id) ? id === bot.uin : 'sender' in id ? id.sender.user_id === bot.uin : id.user_id === bot.uin
-}
 /**
  * 群发群消息
  */
@@ -105,93 +100,10 @@ export async function noticeMainOwner(bot: NapCat, message?: Sendable | null): P
 }
 
 /**
- * 通过域名获取 pskey
- */
-export async function getPskey(bot: NapCat, domain: string): Promise<string> {
-  throw new Error('暂未实现此方法，请使用 napcat.api() 调用原生方法获取')
-  // const body = { 1: 4138, 2: 0, 3: 0, 4: { 1: [domain] }, 6: 'android 8.8.33' }
-  // const pbBody = utils.oicq.core.pb.encode(body)
-  // const pbRes = await bot.sendUni('OidbSvc.0x7e4_0', pbBody)
-  // const res = utils.oicq.core.pb.decode(pbRes)
-
-  // if (!res[4]) return ''
-
-  // const result = utils.oicq.core.pb.decode(res[4].encoded)
-  // const list = {} as Record<string, string>
-
-  // if (!Array.isArray(result[1])) result[1] = [result[1]]
-
-  // for (const val of result[1]) {
-  //   if (val[2]) list[val[1]] = val[2].toString()
-  // }
-
-  // return list[domain]
-}
-
-const cookieCache = new Map<
-  string,
-  {
-    uin: number
-    pskey: string
-    skey: string
-    gtk: string
-    bkn: string
-    cookie: string
-    legacyCookie: string
-  }
->()
-
-/**
- * 通过域名获取 cookie 和其他认证信息，支持缓存
- */
-export async function getCookie(
-  bot: NapCat,
-  domain: string,
-): Promise<{
-  uin: number
-  pskey: string
-  skey: string
-  gtk: string
-  bkn: string
-  cookie: string
-  legacyCookie: string
-}> {
-  const cache = cookieCache.get(domain)
-
-  if (cache) return cache
-
-  const skey = ''
-  const pskey = await getPskey(bot, domain)
-  const gtk = utils.getGTk(pskey)
-
-  const returns = {
-    pskey,
-    skey,
-    uin: bot.uin,
-    gtk: String(gtk),
-    bkn: String(await bot.getBkn()),
-    cookie: `uin=${bot.uin}; skey=${skey}; p_uin=${bot.uin}; p_skey=${pskey};`,
-    legacyCookie: `uin=o${bot.uin}; skey=${skey}; p_uin=o${bot.uin}; p_skey=${pskey};`,
-  }
-
-  cookieCache.set(domain, returns)
-
-  // 1 小时后清除缓存
-  setTimeout(
-    () => {
-      cookieCache.delete(domain)
-    },
-    1000 * 60 * 60,
-  )
-
-  return returns
-}
-
-/**
  * 签名卡片 json
  */
 export async function signArk(bot: NapCat, json: string): Promise<string> {
-  const { cookie, gtk } = await getCookie(bot, 'qzone.qq.com')
+  const { cookie, gtk } = await bot.getCookie('qzone.qq.com')
 
   const fetchArk = (url: string) => {
     return fetch(url, {
@@ -247,34 +159,21 @@ export async function runWithErrorHandler(
 }
 
 /** 创建和并转发消息 */
-export async function createForwardMsg(
+export function createForwardMsg(
   bot: NapCat,
   message: Sendable[] = [],
-  options: {
-    user_id?: number
-    nickname?: string
-    isPrivate?: boolean
-  } = {},
-): Promise<Sendable> {
-  throw new Error('暂未实现此方法，请使用 napcat.api() 调用原生方法获取')
-
-  // const { user_id = bot.uin, nickname = bot.nickname, isPrivate = false } = options
-
-  // return bot.makeForwardMsg(
-  //   message.map((e) => ({
-  //     user_id,
-  //     nickname,
-  //     message: e,
-  //   })),
-  //   isPrivate,
-  // )
+  options: { user_id?: number; nickname?: string } = {},
+): Sendable {
+  const { user_id = bot.uin, nickname } = options
+  const content = message.map((msg) => (typeof msg === 'string' ? segment.text(msg) : msg))
+  return segment.node({ user_id: String(user_id), nickname, content })
 }
 
 /**
  * 上传图片到收藏
  */
 export async function uploadImageToCollection(bot: NapCat, buffer: ArrayBuffer): Promise<string> {
-  const pskey = (await getPskey(bot, 'weiyun.com')) || ''
+  const pskey = (await bot.getPskey('weiyun.com')) || ''
   const uuid = crypto.randomUUID()
 
   let randomID: string | number = crypto.randomInt(1, 99)
@@ -308,7 +207,7 @@ export async function uploadImageToCollection(bot: NapCat, buffer: ArrayBuffer):
  * 上传图片到群作业
  */
 export async function uploadImageToGroupHomework(bot: NapCat, imgBase64: string): Promise<string> {
-  const { cookie, bkn } = await getCookie(bot, 'qun.qq.com')
+  const { cookie, bkn } = await bot.getCookie('qun.qq.com')
 
   const res = await fetch('https://qun.qq.com/cgi-bin/hw/util/image', {
     method: 'POST',
@@ -345,7 +244,7 @@ export async function uploadImageToGroupNotice(
   url5: string
   url6: string
 }> {
-  const { bkn, legacyCookie } = await getCookie(bot, 'qun.qq.com')
+  const { bkn, legacyCookie } = await bot.getCookie('qun.qq.com')
 
   const blob = urlOrBlob instanceof Blob ? urlOrBlob : await (await fetch(urlOrBlob)).blob()
   const form = new FormData()

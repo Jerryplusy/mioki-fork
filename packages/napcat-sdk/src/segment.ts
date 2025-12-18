@@ -45,6 +45,8 @@ export const segment = {
     options?: Omit<ExtractByType<SendElement, 'music'>, 'type' | 'platform' | 'url' | 'audio' | 'title'>,
   ): SendElement => createSegment('music', { platform: 'custom', url, audio, title, ...options }),
   /** 创建一个合并转发消息片段 */
+  node: (options: Partial<ExtractByType<SendElement, 'node'>>): SendElement => createSegment('node', { ...options }),
+  /** 创建一个合并转发消息片段 */
   forward: (id: string): SendElement => createSegment('forward', { id }),
   /** 创建一个 JSON 消息片段 */
   json: (data: string): SendElement => createSegment('json', { data }),
