@@ -55,7 +55,7 @@ export const getMiokiLogger = (level: LogLevel): ConsolaInstance => {
             ' ' +
             colors.bold(colors[LEVEL_MAP[logObj.level].color](LEVEL_MAP[logObj.level].name)) +
             ' ' +
-            (logObj.tag ? colors.bold(colors.dim(`[${logObj.tag}] `)) : '')
+            (logObj.tag ? colors.dim(`[${logObj.tag}] `) : '')
           const line = `${prefix}${message}`
 
           if (logObj.level <= LogLevels['info']) {

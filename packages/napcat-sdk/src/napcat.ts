@@ -18,6 +18,7 @@ import type {
   NormalizedElementToSend,
   OptionalProps,
   PrivateMessageEvent,
+  RecvElement,
   Sendable,
 } from './types'
 
@@ -323,7 +324,7 @@ export class NapCat {
               this.logger.trace(`received private message: ${JSON.stringify(data)}`)
 
               this.logger.info(
-                `[P] ${data.sender.nickname}(${data.sender.user_id}): ${data.message.map((m: any) => (m.type === 'text' ? m.text : `[${m.type}]`)).join('')}`,
+                `[P] ${data.sender.nickname}(${data.sender.user_id}): ${this.stringifyMessage(data.message)}`,
               )
 
               this.#event.emit('message.private', data)
@@ -336,9 +337,9 @@ export class NapCat {
               this.logger.trace(`received group message: ${JSON.stringify(data)}`)
 
               this.logger.info(
-                `[G:${data.group_name}:${data.group_id}] ${data.sender.nickname}(${data.sender.user_id}): ${data.message
-                  .map((m: any) => (m.type === 'text' ? m.text : `[${m.type}]`))
-                  .join('')}`,
+                `[G:${data.group_name}:${data.group_id}] ${data.sender.nickname}(${data.sender.user_id}): ${this.stringifyMessage(
+                  data.message,
+                )}`,
               )
 
               this.#event.emit('message.group', data)
@@ -452,6 +453,34 @@ export class NapCat {
 
       return
     }
+  }
+
+  stringifyMessage(message: RecvElement[]): string {
+    return message
+      .map((el) => {
+        switch (el.type) {
+          case 'text':
+            return el.text
+          case 'at':
+            return `{at:${el.qq}}`
+          case 'face':
+            return `{face:${el.id}}`
+          case 'image':
+            return `{image:${el.file},${el.url}}`
+          case 'json':
+            return `{json:${el.data}}`
+          case 'rps':
+          case 'dice':
+            return `{dice:${el.result}}`
+          case 'file':
+          case 'video':
+          case 'record':
+            return `{${el.type}:${el.url}}`
+          default:
+            return `{${el.type}}`
+        }
+      })
+      .join('')
   }
 
   /** 获取一个群的信息，可以用于发送群消息等操作 */

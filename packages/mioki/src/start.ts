@@ -44,7 +44,7 @@ export async function start(options: StartOptions = {}): Promise<void> {
   })
 
   napcat.on('napcat.connected', async ({ user_id, nickname }) => {
-    logger.info(`>>> 已连接到 NapCat: ${colors.bold(colors.green(nickname))} (${colors.bold(colors.green(user_id))})`)
+    logger.info(`>>> 已连接到 NapCat: ${colors.bold(colors.green(nickname))}（${colors.bold(colors.green(user_id))}）`)
 
     let lastNoticeTime = 0
 
@@ -75,7 +75,7 @@ export async function start(options: StartOptions = {}): Promise<void> {
       .map((p) => ({ dirName: p, absPath: path.resolve(plugin_dir, p) }))
       .filter((p) => {
         if (!fs.existsSync(p.absPath)) {
-          napcat.logger.warn(`>>> 插件 ${p.dirName} 不存在，已忽略`)
+          napcat.logger.warn(`>>> 插件 ${colors.bold(colors.red(p.dirName))} 不存在，已忽略`)
           return false
         }
 
@@ -89,7 +89,7 @@ export async function start(options: StartOptions = {}): Promise<void> {
         const plugin = (await utils.jiti.import(absPath, { default: true })) as MiokiPlugin
 
         if (plugin.name !== dirName) {
-          const tip = `>>> 插件目录名 [${dirName}] 和插件声明的 name [${plugin.name}] 不一致，可能导致重载异常，请修改一致后重启。`
+          const tip = `>>> 插件目录名 [${colors.bold(colors.yellow(dirName))}] 和插件声明的 name [${colors.bold(colors.yellow(plugin.name))}] 不一致，可能导致重载异常，请修改一致后重启。`
           napcat.logger.warn(tip)
           actions.noticeMainOwner(napcat, tip)
         }
@@ -106,7 +106,7 @@ export async function start(options: StartOptions = {}): Promise<void> {
     const sortedUserPlugins = userPlugins.toSorted((prev, next) => (prev.priority ?? 100) - (next.priority ?? 100))
 
     if (failedImportPlugins.length) {
-      const tip = `>>> ${failedImportPlugins.length} 个插件加载失败: \n\n${failedImportPlugins.map(([dirName, err]) => `${dirName}: ${err}`).join('\n\n')}`
+      const tip = `>>> ${colors.bold(colors.red(failedImportPlugins.length))} 个插件加载失败: \n\n${failedImportPlugins.map(([dirName, err]) => `${dirName}: ${err}`).join('\n\n')}`
       napcat.logger.warn(tip)
       actions.noticeMainOwner(napcat, tip)
     }
@@ -128,7 +128,7 @@ export async function start(options: StartOptions = {}): Promise<void> {
 
     try {
       // 加载内置插件
-      napcat.logger.info(`>>> 加载内置插件: ${BUILTIN_PLUGINS.map((p) => p.name).join(', ')}`)
+      napcat.logger.info(`>>> 加载内置插件: ${BUILTIN_PLUGINS.map((p) => colors.bold(colors.cyan(p.name))).join(', ')}`)
       await Promise.all(BUILTIN_PLUGINS.map((p) => enablePlugin(napcat, p, 'builtin')))
 
       // 按优先级分组并行加载用户插件，相同优先级的插件可以并行加载
@@ -156,14 +156,14 @@ export async function start(options: StartOptions = {}): Promise<void> {
 
     const failedInfo =
       failedCount > 0
-        ? `${failedCount} 个失败 (导入 ${failedImportPlugins.length}，启用 ${failedImportPlugins.length})。`
+        ? `${colors.bold(colors.red(failedCount))} 个失败 (导入 ${colors.bold(colors.red(failedImportPlugins.length))}，启用 ${colors.bold(colors.red(failedEnablePlugins.length))})。`
         : ''
 
     napcat.logger.info(
-      `>>> 成功加载了 ${runtimePlugins.size} 个插件。${failedInfo ? failedInfo : ''}总耗时 ${costTime} ms`,
+      `>>> 成功加载了 ${colors.bold(colors.green(runtimePlugins.size))} 个插件。${failedInfo ? failedInfo : ''}总耗时 ${colors.bold(colors.green(costTime.toFixed(2)))} ms`,
     )
 
-    napcat.logger.info(`>>> mioki 启动完成！祝您使用愉快！🎉️`)
+    napcat.logger.info(colors.bold(colors.green(`>>> mioki v${version} 启动完成！祝您使用愉快！🎉️`)))
 
     if (cfg.botConfig.online_push) {
       await actions.noticeMainOwner(napcat, `✅ mioki v${version} 已就绪`).catch((err) => {
