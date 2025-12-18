@@ -12,7 +12,7 @@ export interface MiokiConfig {
   plugins: string[]
   online_push?: boolean
   napcat: {
-    protocol?: string
+    protocol?: 'ws' | 'wss'
     port?: number
     host?: string
     token: string
@@ -41,6 +41,7 @@ export function readMiokiConfig(): MiokiConfig {
   const config = readPackageJson().mioki
 
   if (!config) throw new Error(`无法在 package.json 中找到 mioki 配置，请确认 package.json 文件中是否包含 mioki 字段`)
+  if (!config.napcat) throw new Error(`mioki 配置中缺少 napcat 字段，请补全后重试`)
 
   return readPackageJson().mioki
 }

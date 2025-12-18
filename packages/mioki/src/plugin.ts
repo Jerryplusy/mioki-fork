@@ -5,6 +5,7 @@ import { hrtime } from 'node:process'
 
 import * as utilsExports from './utils'
 import * as configExports from './config'
+import * as actionsExports from './actions'
 import * as servicesExports from './services'
 
 import type { EventMap, NapCat } from 'napcat-sdk'
@@ -14,12 +15,38 @@ type Num = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
 type Utils = typeof utilsExports
 type Configs = typeof configExports
+type Actions = typeof actionsExports
 type Services = typeof servicesExports
+
+type StrictEqual<T, U> = (<G>() => G extends T ? 1 : 2) extends <G>() => G extends U ? 1 : 2 ? true : false
+
+// 映射类型，用于遍历原始类型的每个键，并应用 RemoveFirstParam
+type RemoveBotParam<T> = {
+  [K in keyof T]: T[K] extends (...args: any[]) => any
+    ? StrictEqual<Parameters<T[K]>[0], NapCat> extends true
+      ? OmitBotParamFromFunc<T[K]>
+      : never
+    : never
+}
+
+export type OmitBotParamFromFunc<Func extends (bot: NapCat, ...args: any[]) => any> = Func extends (
+  bot: NapCat,
+  ...args: infer A
+) => infer Return
+  ? (...args: A) => Return
+  : never
+
+export function bindBot<Params extends Array<any> = any[], Return = any>(
+  bot: NapCat,
+  func: (bot: NapCat, ...args: Params) => Return,
+): OmitBotParamFromFunc<(bot: NapCat, ...args: Params) => Return> {
+  return (...args: Params): Return => func(bot, ...args)
+}
 
 /**
  * Mioki 上下文对象，包含 Mioki 运行时的信息和方法
  */
-export interface MiokiContext extends Services, Configs, Utils {
+export interface MiokiContext extends Services, Configs, Utils, RemoveBotParam<Actions> {
   /** 机器人实例 */
   bot: NapCat
   /** 消息构造器 */
@@ -53,6 +80,11 @@ export const runtimePlugins: Map<
     disable: () => any
   }
 >()
+
+const buildRemovedActions = (bot: NapCat) =>
+  Object.fromEntries(
+    Object.entries(actionsExports).map(([k, v]) => [k, utilsExports.bindBot(bot, v as any)]),
+  ) as RemoveBotParam<Actions>
 
 export interface MiokiPlugin {
   /** 插件 ID，请保持唯一，一般为插件目录名称，框架内部通过这个识别不同的插件 */
@@ -95,6 +127,7 @@ export async function enablePlugin(
       segment: bot.segment,
       ...utilsExports,
       ...configExports,
+      ...buildRemovedActions(bot),
       services: servicesExports.services,
       clears: userClears,
       addService: (name: string, service: any, cover?: boolean) => {

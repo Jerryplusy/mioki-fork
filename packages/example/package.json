@@ -13,6 +13,7 @@
     "owners": [],
     "admins": [],
     "plugins": [],
+    "online_push": true,
     "napcat": {
       "protocol": "ws",
       "port": 3333,

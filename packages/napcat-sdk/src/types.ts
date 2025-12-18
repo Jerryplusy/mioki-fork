@@ -31,6 +31,9 @@ export interface EventMap extends OneBotEventMap {
   'ws.error': Event
   /** 收到 WebSocket 消息 */
   'ws.message': any
+
+  /** NapCat 连接已建立 */
+  'napcat.connected': { uin: number; ts: number }
 }
 
 /**

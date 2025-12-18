@@ -40,6 +40,8 @@ export class NapCat {
   #echoEvent: Emitter<Record<string, unknown>> = mitt()
   /** 机器人 ID */
   #uin: number = 0
+  /** 机器人昵称  */
+  #nickname: string = '-'
   /** 机器人状态 */
   #online: boolean = false
   /** Cookies 缓存 */
@@ -87,6 +89,27 @@ export class NapCat {
   /** 消息段构建器 */
   get segment(): typeof segment {
     return segment
+  }
+
+  /**
+   * 机器人 QQ 号
+   */
+  get user_id(): number {
+    return this.uin
+  }
+
+  /**
+   * 机器人 QQ 号
+   */
+  get uin(): number {
+    return this.#uin
+  }
+
+  /**
+   * 机器人昵称
+   */
+  get nickname(): string {
+    return this.#nickname
   }
 
   /** 生成唯一的 echo ID */
@@ -261,7 +284,11 @@ export class NapCat {
               if (data.sub_type === 'connect') {
                 this.#uin = data.self_id
                 this.#online = true
-                this.#event.emit('mioki.online', { uin: this.#uin, ts: data.time * 1000 })
+                this.#event.emit('napcat.connected', { uin: this.#uin, ts: data.time * 1000 })
+
+                this.getLoginInfo().then((info) => {
+                  this.#nickname = info.nickname
+                })
               }
 
               this.#event.emit(`meta_event.${data.meta_event_type}.${data.sub_type}`, data)
@@ -426,13 +453,6 @@ export class NapCat {
   }
 
   /**
-   * 机器人 QQ 号
-   */
-  get uin(): number {
-    return this.#uin
-  }
-
-  /**
    * 注册一次性事件监听器
    */
   once<T extends keyof EventMap>(type: T, handler: (event: EventMap[NoInfer<T>]) => void): void {
@@ -506,16 +526,24 @@ export class NapCat {
   /**
    * 计算 GTK 值
    */
-  getGTk(skey: string): number {
-    let hash = 5381
-    for (let i = 0; i < skey.length; i++) {
-      hash += (hash << 5) + skey.charCodeAt(i)
+  getGTk(pskey: string): number {
+    let gkt = 5381
+    for (let i = 0, len = pskey.length; i < len; ++i) {
+      gkt += (gkt << 5) + pskey.charCodeAt(i)
     }
-    return hash & 0x7fffffff
+    return gkt & 0x7fffffff
   }
 
-  async getNapCatCookies(domain: string): Promise<{ cookies: string; bkn: string }> {
-    return await this.api<{ cookies: string; bkn: string }>('get_cookies', { domain })
+  getNapCatCookies(domain: string): Promise<{ cookies: string; bkn: string }> {
+    return this.api<{ cookies: string; bkn: string }>('get_cookies', { domain })
+  }
+
+  getVersionInfo(): Promise<{ app_name: string; protocol_version: string; app_version: string }> {
+    return this.api<{ app_name: string; protocol_version: string; app_version: string }>('get_version_info')
+  }
+
+  getLoginInfo(): Promise<{ user_id: number; nickname: string }> {
+    return this.api<{ user_id: number; nickname: string }>('get_login_info')
   }
 
   /**
@@ -568,9 +596,9 @@ export class NapCat {
     return pskey
   }
 
-  async getBkn(): Promise<number> {
+  async getBkn(): Promise<string> {
     const { bkn } = await this.getCookie('vip.qq.com')
-    return Number(bkn)
+    return bkn
   }
 
   /** 启动 NapCat SDK 实例，建立 WebSocket 连接 */

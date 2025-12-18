@@ -291,17 +291,6 @@ export const isPrivateMsg = (event: MessageEvent): event is PrivateMessageEvent 
 }
 
 /**
- * 通过 p_skey 获取 gtk
- */
-export function getGTk(pskey: string): number {
-  let gkt = 5381
-  for (let i = 0, len = pskey.length; i < len; ++i) {
-    gkt += (gkt << 5) + pskey.charCodeAt(i)
-  }
-  return gkt & 0x7fffffff
-}
-
-/**
  * 异步延时函数
  *
  * @param {number} ms 等待毫秒数
