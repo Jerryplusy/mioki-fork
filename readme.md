@@ -2,7 +2,7 @@
 
 A simple NapCat OneBot v11 framework.
 
-<img src="./docs//demo.png" title="demo" alt="demo" style="width: 360px; max-width: 360px; border-radius: 4px; border: none;" />
+<img src="./docs//demo.png" title="demo" alt="demo" style="max-width: 640px; border-radius: 4px; border: none;" />
 
 > [!CAUTION]
 > This project is still under active development. Use it at your own risk.
