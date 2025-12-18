@@ -5,9 +5,16 @@ import dedent from 'dedent'
 import { jiti, unique } from '../../utils'
 import { version } from '../../../package.json' with { type: 'json' }
 import { string2argv } from 'string2argv'
+import { botConfig, updateBotConfig } from '../../config'
 import { getMiokiStatus, MiokiStatus, getMiokiStatusStr } from './status'
-import { BOT_CWD, botConfig, updateBotConfig } from '../../config'
-import { definePlugin, enablePlugin, findLocalPlugins, runtimePlugins, type MiokiPlugin } from '../../plugin'
+import {
+  definePlugin,
+  enablePlugin,
+  findLocalPlugins,
+  getAbsPluginDir,
+  runtimePlugins,
+  type MiokiPlugin,
+} from '../../plugin'
 
 const corePlugins = ['mioki-core']
 
@@ -115,7 +122,7 @@ const core: MiokiPlugin = definePlugin({
                   return
                 }
 
-                const pluginPath = path.join(BOT_CWD.value, 'plugins', target)
+                const pluginPath = path.join(getAbsPluginDir(), target)
 
                 if (!fs.existsSync(pluginPath)) {
                   await e.reply(`插件 ${target} 不存在`, true)
@@ -187,7 +194,7 @@ const core: MiokiPlugin = definePlugin({
                     await plugin.disable()
                   }
 
-                  const pluginPath = path.join(BOT_CWD.value, 'plugins', target)
+                  const pluginPath = path.join(getAbsPluginDir(), target)
 
                   if (!fs.existsSync(pluginPath)) {
                     await e.reply(`插件 ${target} 不存在`, true)
