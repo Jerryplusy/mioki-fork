@@ -9,7 +9,6 @@ import { fileURLToPath } from 'node:url'
 import { segment } from 'napcat-sdk'
 
 export { default as prettyMs } from 'pretty-ms'
-export { default as KIVI_PKG } from '../package.json'
 
 import type { BinaryLike, BinaryToTextEncoding } from 'node:crypto'
 import type {

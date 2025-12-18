@@ -1,6 +1,5 @@
-import fs from 'node:fs'
 import path from 'node:path'
-import dayjs from 'dayjs'
+import { dayjs, isNumber, unique } from './utils'
 
 /**
  * OneBot 11 正向 WebSocket 配置
@@ -48,24 +47,24 @@ export const updateBotConfig = async (draftFn: (config: MiokiConfig) => any): Pr
   botConfig.plugins = unique(botConfig.plugins).toSorted((prev, next) => prev.localeCompare(next))
   botConfig.admins = unique(botConfig.admins).toSorted((prev, next) => prev - next)
 
-  const toml = smolToml.stringify(botConfig) ?? ''
+  // const toml = smolToml.stringify(botConfig) ?? ''
 
-  await fs.promises.writeFile(CFG_PATH.value, toml)
+  // await fs.promises.writeFile(CFG_PATH.value, toml)
 
-  console.log(`>>> 检测到配置变动，已同步至 ${CFG_PATH.value}`)
+  // console.log(`>>> 检测到配置变动，已同步至 ${CFG_PATH.value}`)
 }
 
 /**
  * 机器人根目录
  */
-export const BOT_CWD = {
+export const BOT_CWD: { value: string } = {
   value: process.cwd(),
 }
 
 /**
  * 更新机器人根目录
  */
-export const updateBotCWD = (root: string) => {
+export const updateBotCWD = (root: string): void => {
   BOT_CWD.value = root
   console.log(`>>> 机器人根目录已设置为 ${root}`)
 }
@@ -73,8 +72,8 @@ export const updateBotCWD = (root: string) => {
 /**
  * 是否是主人
  */
-export const isOwner = (id: number | { sender: { user_id: number } } | { user_id: number }) => {
-  const owners = [botConfig.uin, ...botConfig.owners]
+export const isOwner = (id: number | { sender: { user_id: number } } | { user_id: number }): boolean => {
+  const owners = botConfig.owners
 
   return isNumber(id)
     ? owners.includes(id)
@@ -86,7 +85,7 @@ export const isOwner = (id: number | { sender: { user_id: number } } | { user_id
 /**
  * 是否是管理员，注意: 主人不是管理员
  */
-export const isAdmin = (id: number | { sender: { user_id: number } } | { user_id: number }) => {
+export const isAdmin = (id: number | { sender: { user_id: number } } | { user_id: number }): boolean => {
   const admins = botConfig.admins
 
   return isNumber(id)
@@ -99,55 +98,26 @@ export const isAdmin = (id: number | { sender: { user_id: number } } | { user_id
 /**
  * 是否是主人或管理员
  */
-export const isOwnerOrAdmin = (id: number | { sender: { user_id: number } } | { user_id: number }) => {
+export const isOwnerOrAdmin = (id: number | { sender: { user_id: number } } | { user_id: number }): boolean => {
   return isOwner(id) || isAdmin(id)
 }
 
 /**
  * 是否有权限，即：主人或管理员
  */
-export const hasRight = (id: number | { sender: { user_id: number } } | { user_id: number }) => {
+export const hasRight = (id: number | { sender: { user_id: number } } | { user_id: number }): boolean => {
   return isOwnerOrAdmin(id)
 }
 
 /**
  * 是否在 PM2 中运行
  */
-export const isInPm2 = 'pm_id' in process.env || 'PM2_USAGE' in process.env
+export const isInPm2: boolean = Boolean('pm_id' in process.env || 'PM2_USAGE' in process.env)
 
 /**
  * 获取日志文件名
  */
-export function getLogFilePath(uin: number, platformName: string) {
+export function getLogFilePath(uin: number, platformName: string): string {
   const startTime = dayjs().format('YYYY-MM-DD_HH-mm-ss')
   return path.join(BOT_CWD.value, `logs/${uin}_${platformName}_${startTime}.log`)
-}
-
-export function createLog4JsConfig(uin: number, logLevel: string, platformName: string): _log4js.Configuration {
-  return {
-    categories: {
-      default: {
-        appenders: ['console', 'file'],
-        level: logLevel,
-      },
-    },
-    appenders: {
-      console: {
-        type: 'console',
-        layout: {
-          type: 'pattern',
-          pattern: isInPm2 ? '%[[%p]%] %m' : '[%d{yyyy/MM/dd hh:mm:ss:SSS}] %[[%p]%] %m',
-        },
-      },
-      file: {
-        type: 'file',
-        filename: getLogFilePath(uin, platformName),
-        maxLogSize: 1024 * 1024 * 10, // 10 MB
-        layout: {
-          type: 'pattern',
-          pattern: '[%d] %[[%p]%] %c %m',
-        },
-      },
-    },
-  }
 }
