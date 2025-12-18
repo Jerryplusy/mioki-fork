@@ -79,7 +79,7 @@ export async function noticeOwners(bot: NapCat, message?: Sendable | null, delay
  * 群发通知给第一个主人
  */
 export async function noticeMainOwner(bot: NapCat, message?: Sendable | null): Promise<void> {
-  if (!bot.isOnline) {
+  if (!bot.isOnline()) {
     bot.logger.error('发送失败，Bot 不在线')
     return
   }

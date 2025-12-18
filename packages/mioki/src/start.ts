@@ -4,11 +4,11 @@ import { hrtime } from 'node:process'
 import * as cfg from './config'
 import { NapCat } from 'napcat-sdk'
 import { version } from '../package.json'
-import { enablePlugin, runtimePlugins } from './plugin'
 import * as utils from './utils'
 import * as actions from './actions'
 import { getMiokiLogger } from './logger'
 import { BUILTIN_PLUGINS } from './builtins'
+import { enablePlugin, ensurePluginDir, getAbsPluginDir, runtimePlugins } from './plugin'
 
 import type { MiokiPlugin } from './plugin'
 
@@ -26,8 +26,9 @@ export async function start(options: StartOptions = {}): Promise<void> {
   process.title = `mioki v${version}`
 
   const logger = getMiokiLogger(cfg.botConfig.log_level || 'info')
+  const plugin_dir = getAbsPluginDir()
 
-  logger.info(`>>> mioki v${version} 启动中，工作目录: ${cfg.BOT_CWD.value}`)
+  logger.info(`>>> mioki v${version} 启动中，工作目录: ${cfg.BOT_CWD.value}，插件目录: ${plugin_dir}`)
 
   const napcat = new NapCat({
     ...cfg.botConfig.napcat,
@@ -35,7 +36,7 @@ export async function start(options: StartOptions = {}): Promise<void> {
   })
 
   napcat.on('napcat.connected', async ({ uin }) => {
-    logger.info(`>>> 已连接到 NapCat 服务器，账号: ${uin}`)
+    logger.info(`>>> 已连接到 NapCat 服务器，当前登录 QQ 账号: ${uin}`)
 
     let lastNoticeTime = 0
 
@@ -54,8 +55,10 @@ export async function start(options: StartOptions = {}): Promise<void> {
       await actions.noticeMainOwner(napcat, `【${date}】\n\nmioki 发生未处理异常:\n\n${err?.message || '未知错误'}`)
     })
 
+    ensurePluginDir()
+
     const plugins = cfg.botConfig.plugins
-      .map((p) => ({ dirName: p, absPath: path.resolve(cfg.BOT_CWD.value, 'plugins', p) }))
+      .map((p) => ({ dirName: p, absPath: path.resolve(plugin_dir, p) }))
       .filter((p) => {
         if (!fs.existsSync(p.absPath)) {
           napcat.logger.warn(`>>> 插件 ${p.dirName} 不存在，已忽略`)

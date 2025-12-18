@@ -5,7 +5,7 @@
   "dependencies": {
     "mioki": "workspace:*"
   },
-  "script": {
+  "scripts": {
     "start": "bun app.ts"
   },
   "mioki": {
@@ -17,6 +17,7 @@
     "admins": [],
     "plugins": [],
     "online_push": true,
+    "plugins_dir": "../plugins",
     "napcat": {
       "protocol": "ws",
       "port": 3333,

@@ -12,6 +12,7 @@
     "bot"
   ],
   "scripts": {
+    "start": "pnpm -C example run start",
     "dev": "pnpm --parallel --filter './packages/**' run dev",
     "build": "pnpm --parallel --filter './packages/**' run build",
     "release": "bumpp -r",
@@ -26,8 +27,15 @@
   "author": "Viki <hi@viki.moe> (https://github.com/vikiboss)",
   "license": "MIT",
   "devDependencies": {
-    "napcat-sdk": "workspace:*",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
     "bumpp": "^10.3.2",
-    "prettier": "^3.7.4"
+    "mioki": "workspace:*",
+    "napcat-sdk": "workspace:*",
+    "prettier": "^3.7.4",
+    "puppeteer-core": "^24.33.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "sharp": "^0.34.5"
   }
 }

@@ -95,6 +95,8 @@ export interface MiokiPlugin {
   priority?: number
   /** 插件描述，额外提示信息，暂没有被使用到的地方 */
   description?: string
+  /** 插件额外依赖，框架不处理，仅做参考提醒用途 */
+  dependencies?: string[]
   /** 插件初始化，返回一个清理函数，用于在插件卸载时清理资源，比如定时器、数据库连接等 */
   setup?: (ctx: MiokiContext) => any
 }
@@ -106,6 +108,25 @@ export interface MiokiPlugin {
  */
 export function definePlugin(plugin: MiokiPlugin): MiokiPlugin {
   return plugin
+}
+
+/**
+ * 确保插件目录存在
+ */
+export function ensurePluginDir(): void {
+  const dir = getAbsPluginDir()
+
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true })
+  }
+}
+
+/**
+ * 获取插件目录的绝对路径
+ */
+export function getAbsPluginDir(defaultDir: string = 'plugin'): string {
+  const cwd = configExports.BOT_CWD.value
+  return path.resolve(cwd, configExports.botConfig.plugin_dir || defaultDir)
 }
 
 export async function enablePlugin(
@@ -182,12 +203,12 @@ export async function enablePlugin(
 }
 
 export async function findLocalPlugins(): Promise<{ name: string; absPath: string }[]> {
-  const dirents = await fs.promises.readdir(path.join(configExports.BOT_CWD.value, 'plugins'), { withFileTypes: true })
+  const dirents = await fs.promises.readdir(getAbsPluginDir(), { withFileTypes: true })
 
   return dirents
     .filter((e) => e.isDirectory() && !!e.name && !e.name.startsWith('_'))
     .map((e) => ({
       name: e.name,
-      absPath: path.join(configExports.BOT_CWD.value, 'plugins', e.name),
+      absPath: path.join(getAbsPluginDir(), e.name),
     }))
 }

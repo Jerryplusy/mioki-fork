@@ -448,6 +448,7 @@ export class NapCat {
       return this.#buildFriend(user_id, friendInfo.nickname, friendInfo)
     } catch (err: any) {
       this.logger.warn(`Error to pickFriend ${user_id}: ${err?.message || err}`)
+      // return this.#buildFriend(user_id, '', {}) as FriendWithInfo
       return null
     }
   }
