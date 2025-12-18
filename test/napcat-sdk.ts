@@ -15,10 +15,15 @@ const napcat = new NapCat({
 // })
 
 napcat.on('message.group', async (e) => {
-  console.log('[message]', JSON.stringify(e))
+  // console.log('[message]', JSON.stringify(e))
 
-  if (e.raw_message === 'rss') {
-    return e.reply(`RSS 内存: ${process.memoryUsage().rss / 1024 / 1024} MB`)
+  // if (e.raw_message === 'rss') {
+  //   return e.reply(`RSS 内存: ${process.memoryUsage().rss / 1024 / 1024} MB`)
+  // }
+
+  if (e.quote_id) {
+    const quotedMessage = await e.getQuoteMessage()
+    console.log('Quoted message content:', quotedMessage)
   }
 
   // if (e.raw_message === 'ping') {

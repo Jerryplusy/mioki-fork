@@ -176,25 +176,44 @@ export class NapCat {
     }
   }
 
-  /** 构建群消息事件 */
-  #buildPrivateMessageEvent(event: PrivateMessageEvent) {
+  /** 构建私聊消息事件 */
+  #buildPrivateMessageEvent(event: Omit<PrivateMessageEvent, 'message'> & { message: any[] }): PrivateMessageEvent {
+    const quote_id: string | null = event.message.find((el: any) => el.type === 'reply')?.data?.id || null
+
     return {
       ...event,
-      message: (event.message || []).map((el: any) => ({ type: el.type, ...el.data })),
+      quote_id,
+      getQuoteMessage: async (): Promise<PrivateMessageEvent | null> => {
+        if (!quote_id) return null
+        const event = await this.api<PrivateMessageEvent>('get_msg', { message_id: quote_id })
+        return this.#buildPrivateMessageEvent(event)
+      },
+      message: (event.message || [])
+        .filter((e) => e.type !== 'reply')
+        .map((el: any) => ({ type: el.type, ...el.data })),
       friend: this.#buildFriend(event.user_id, event.sender?.nickname || ''),
-      recall: () => this.api('delete_msg', { message_id: event.message_id }),
       reply: (sendable: Sendable | Sendable[], reply = false) =>
         this.sendPrivateMsg(event.user_id, this.#wrapReply(sendable, event.message_id, reply)),
     }
   }
 
   /** 构建群消息事件对象 */
-  #buildGroupMessageEvent(event: GroupMessageEvent) {
+  #buildGroupMessageEvent(event: Omit<GroupMessageEvent, 'message'> & { message: any[] }): GroupMessageEvent {
+    const quote_id: string | null = event.message.find((el: any) => el.type === 'reply')?.data?.id || null
+
     return {
       ...event,
-      message: (event.message || []).map((el: any) => ({ type: el.type, ...el.data })),
+      quote_id,
+      getQuoteMessage: async (): Promise<GroupMessageEvent | null> => {
+        if (!quote_id) return null
+        const event = await this.api<GroupMessageEvent>('get_msg', { message_id: quote_id })
+        return this.#buildGroupMessageEvent(event)
+      },
+      message: (event.message || [])
+        .filter((e) => e.type !== 'reply')
+        .map((el: any) => ({ type: el.type, ...el.data })),
       group: this.#buildGroup(event.group_id, event.group?.group_name || ''),
-      recall: () => this.api('delete_msg', { message_id: event.message_id }),
+      recall: () => this.api<any>('delete_msg', { message_id: event.message_id }),
       addReaction: (id: string) =>
         this.api('set_msg_emoji_like', { message_id: event.message_id, emoji_id: id, set: true }),
       delReaction: (id: string) =>

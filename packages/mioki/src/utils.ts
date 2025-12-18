@@ -546,68 +546,49 @@ export async function getQuoteMessage(
   event: MessageEvent,
   timeout = 3_000,
 ): Promise<GroupMessageEvent | PrivateMessageEvent | null> {
-  throw new Error('getQuoteMessage: 暂未实现引用消息获取功能')
-  // if (!('source' in event)) return null
+  if (!event.quote_id) return null
 
-  // const { seq, time } = event.source || {}
-  // if (!seq) return null
+  const quote_id = event.quote_id
 
-  // // 生成唯一 key
-  // const key = isGroupMsg(event) ? `${event.group_id}_${seq}` : `${event.sender.user_id}_${time}`
-  // const cacheMsg = messageCacheMap.get(key)
+  // 生成唯一 key
+  const key = isGroupMsg(event) ? `${event.group_id}_${quote_id}` : `${event.sender.user_id}_${quote_id}`
+  const cacheMsg = messageCacheMap.get(key)
+  // 是否正在获取
+  const isFetching = cacheMsg === 'loading'
+  // 是否获取结束（已经获取过）
+  const isFetchDone = cacheMsg !== undefined && !isFetching
+  // 如果已经获取过，直接返回
+  if (isFetchDone) return cacheMsg
+  // 如果正在获取，等待获取完成
+  if (isFetching) {
+    const start = Date.now()
+    return new Promise((resolve) => {
+      const timer = setInterval(() => {
+        const cacheMsg = messageCacheMap.get(key)
+        const isFetching = cacheMsg === 'loading'
+        const isFetchDone = cacheMsg !== undefined && !isFetching
+        if (isFetchDone) {
+          clearInterval(timer)
+          resolve(cacheMsg)
+        } else if (Date.now() - start > timeout) {
+          clearInterval(timer)
+          throw new Error(`>>> 获取引用消息超时 ${timeout}, Key: ${key}`)
+        }
+      }, 100)
+    })
+  }
 
-  // // 是否正在获取
-  // const isFetching = cacheMsg === 'loading'
-  // // 是否获取结束（已经获取过）
-  // const isFetchDone = cacheMsg !== undefined && !isFetching
+  // 开始获取
+  messageCacheMap.set(key, 'loading')
 
-  // // 如果已经获取过，直接返回
-  // if (isFetchDone) return cacheMsg
+  const msg = await event.getQuoteMessage()
 
-  // // 如果正在获取，等待获取完成
-  // if (isFetching) {
-  //   const start = Date.now()
+  // 如果缓存达到阈值则清空
+  if (messageCacheMap.size > 100) messageCacheMap.clear()
 
-  //   return new Promise((resolve) => {
-  //     const timer = setInterval(() => {
-  //       const cacheMsg = messageCacheMap.get(key)
-  //       const isFetching = cacheMsg === 'loading'
-  //       const isFetchDone = cacheMsg !== undefined && !isFetching
+  messageCacheMap.set(key, msg)
 
-  //       if (isFetchDone) {
-  //         clearInterval(timer)
-  //         resolve(cacheMsg)
-  //       } else if (Date.now() - start > timeout) {
-  //         clearInterval(timer)
-  //         throw new Error(`>>> 获取引用消息超时 (${time} ms), Key: ${key}`)
-  //       }
-  //     }, 100)
-  //   })
-  // }
-
-  // // 开始获取
-  // messageCacheMap.set(key, 'loading')
-
-  // if (isPrivateMsg(event)) {
-  //   event.friend.client.logger.trace(`>>> 获取私聊引用消息, key=Private_${key}`)
-  //   const msg = (await event.friend.getChatHistory(time, 1))[0] || null
-  //   messageCacheMap.set(key, msg)
-  //   return msg
-  // }
-
-  // if (isGroupMsg(event)) {
-  //   event.group.client.logger.trace(`>>> 获取群聊引用消息, key=Group_${key}`)
-  //   const msg = (await event.group.getChatHistory(seq, 1))[0] || null
-  //   messageCacheMap.set(key, msg)
-  //   return msg
-  // }
-
-  // // 如果缓存达到阈值则清空
-  // if (messageCacheMap.size > 100) messageCacheMap.clear()
-
-  // messageCacheMap.set(key, null)
-
-  // return null
+  return msg
 }
 
 /**

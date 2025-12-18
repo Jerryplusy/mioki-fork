@@ -679,6 +679,8 @@ export type MessageEventBase<T extends MessageType, U extends object> = EventBas
   U & {
     /** 消息 ID */
     message_id: number
+    /** 引用的消息 ID */
+    quote_id: string | null
     /** 消息类型 */
     message_type: T
     /** 消息序号 */
@@ -711,6 +713,8 @@ export type PrivateMessageEvent = MessageEventBase<
     target_id: number
     /** 好友信息对象 */
     friend: Friend
+    /** 获取引用的消息 */
+    getQuoteMessage: () => Promise<PrivateMessageEvent | null>
     /** 发送者信息 */
     sender: {
       /** 发送者 QQ 号 */
@@ -742,6 +746,12 @@ export type GroupMessageEvent = MessageEventBase<
     addReaction: ReactionAction
     /** 删除消息表态的方法 */
     delReaction: ReactionAction
+    /** 获取引用的消息 */
+    getQuoteMessage: () => Promise<GroupMessageEvent | null>
+    /** 添加精华消息的方法 */
+    addEssence: () => Promise<void>
+    /** 删除精华消息的方法 */
+    delEssence: () => Promise<void>
     /** 群信息对象 */
     group: Group
     /** 发送者信息 */
