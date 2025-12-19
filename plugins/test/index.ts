@@ -1,15 +1,15 @@
 import { definePlugin } from 'mioki'
 
 export default definePlugin({
-  name: 'hi',
+  name: 'test',
   version: '1.0.0', // optional
   priority: 10, // optional, default is 10
   description: 'A simple hi plugin', // optional
   async setup(ctx) {
     // ctx.logger.info(`bot: ${ctx.bot.uin}, ${ctx.bot.nickname}`)
 
-    const res = await ctx.bot.getGroupMemberInfo(608391254, 715785945)
-    ctx.logger.info('group member info:', JSON.stringify(res))
+    // const res = await ctx.bot.getGroupMemberInfo(608391254, 715785945)
+    // ctx.logger.info('group member info:', JSON.stringify(res))
 
     ctx.handle('notice', async (e) => {
       ctx.logger.info(`received a notice: ${JSON.stringify(e)}`)

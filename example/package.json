@@ -15,7 +15,7 @@
     ],
     "admins": [],
     "plugins": [
-      "hi"
+      "test"
     ],
     "log_level": "info",
     "plugins_dir": "../plugins",
