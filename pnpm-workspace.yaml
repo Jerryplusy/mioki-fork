@@ -3,6 +3,11 @@ packages:
   - example
 
 catalogs:
+  react19:
+    '@types/react': ^19
+    '@types/react-dom': ^19
+    react: ^19.2.3
+    react-dom: ^19.2.3
   dev:
     '@types/node': ^24
     tsdown: ^0.18.0

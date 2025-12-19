@@ -27,15 +27,17 @@
   "author": "Viki <hi@viki.moe> (https://github.com/vikiboss)",
   "license": "MIT",
   "devDependencies": {
-    "@types/react": "^19.2.7",
-    "@types/react-dom": "^19.2.3",
+    "@types/node": "catalog:dev",
+    "@types/react-dom": "catalog:react19",
+    "@types/react": "catalog:react19",
     "bumpp": "^10.3.2",
     "mioki": "workspace:*",
     "napcat-sdk": "workspace:*",
     "prettier": "^3.7.4",
     "puppeteer-core": "^24.33.0",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
-    "sharp": "^0.34.5"
+    "react-dom": "catalog:react19",
+    "react": "catalog:react19",
+    "sharp": "^0.34.5",
+    "typescript": "catalog:dev"
   }
 }

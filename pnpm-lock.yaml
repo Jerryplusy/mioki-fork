@@ -15,16 +15,32 @@ catalogs:
     typescript:
       specifier: ^5.9.3
       version: 5.9.3
+  react19:
+    '@types/react':
+      specifier: ^19
+      version: 19.2.7
+    '@types/react-dom':
+      specifier: ^19
+      version: 19.2.3
+    react:
+      specifier: ^19.2.3
+      version: 19.2.3
+    react-dom:
+      specifier: ^19.2.3
+      version: 19.2.3
 
 importers:
 
   .:
     devDependencies:
+      '@types/node':
+        specifier: catalog:dev
+        version: 24.10.4
       '@types/react':
-        specifier: ^19.2.7
+        specifier: catalog:react19
         version: 19.2.7
       '@types/react-dom':
-        specifier: ^19.2.3
+        specifier: catalog:react19
         version: 19.2.3(@types/react@19.2.7)
       bumpp:
         specifier: ^10.3.2
@@ -42,14 +58,17 @@ importers:
         specifier: ^24.33.0
         version: 24.33.0
       react:
-        specifier: ^19.2.3
+        specifier: catalog:react19
         version: 19.2.3
       react-dom:
-        specifier: ^19.2.3
+        specifier: catalog:react19
         version: 19.2.3(react@19.2.3)
       sharp:
         specifier: ^0.34.5
         version: 0.34.5
+      typescript:
+        specifier: catalog:dev
+        version: 5.9.3
 
   example:
     dependencies:
