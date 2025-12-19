@@ -9,7 +9,7 @@ head:
 hero:
   name: mioki
   text: KiviBot 的精神继承者
-  tagline: 基于 NapCat 的插件式 OneBot 机器人框架
+  tagline: 基于 NapCat 的插件式 OneBot 机器人框架，使用 TypeScript 编写，轻量、优雅、跨平台
   image:
     src: /logo.png
     alt: mioki

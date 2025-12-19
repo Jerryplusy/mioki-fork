@@ -1,68 +1,87 @@
-# KiviBot 简介 {#KiviBot}
+<img src="/logo.png" title="mioki" alt="mioki" style="max-width: 160px; border-radius: 4px; border: none;" />
 
-[![npm-version](https://img.shields.io/npm/v/@kivibot/core?color=527dec&label=%40kivibot%2Fcore&style=flat-square)](https://npm.im/package/@kivibot/core)
+# mioki 简介 {#mioki}
 
-[![dm](https://shields.io/npm/dm/@kivibot/core?label=downloads&style=flat-square)](https://npm.im/package/@kivibot/core)
-
-[![npm-version](https://img.shields.io/npm/v/kivibot?color=527dec&label=kivibot%20(cli)&style=flat-square)](https://npm.im/package/kivibot)
-
-[![dm](https://shields.io/npm/dm/kivibot?label=downloads&style=flat-square)](https://npm.im/package/kivibot)
-
-[![node-engine](https://img.shields.io/node/v/@kivibot/core?style=flat-square&logo=Node.js&logoColor=ffffff&color=527dec)](https://nodejs.org)
+<div style="display: flex; gap: 8px; margin-top: 12px; margin-bottom: 16px;">
+  <img src="https://img.shields.io/npm/v/mioki?color=527dec&label=mioki&style=flat-square" title="npm" alt="npm" class="inline"/>
+  <img src="https://shields.io/npm/dm/mioki?label=downloads&style=flat-square" title="npm-download" alt="npm-download" class="inline"/>
+</div>
 
 ::: warning 请注意
-框架仍处于**测试阶段**, 可能会有潜在 `bug`, 框架文档也正在完善中, 敬请期待。
+框架仍处于**活跃开发阶段**, API 可能发生较大更改, 请勿用于生产环境。
 :::
 
-`KiviBot` 是使用 [TypeScript](https://www.typescriptlang.org/) 语言编写的**轻量**、**优雅**、**跨平台**、**开发者友好**、**能跑就行**的 QQ 机器人框架。
+`mioki` 是基于 [NapCat](https://napneko.github.io/) 的插件式 [OneBot](onebot.dev) 机器人框架，[KiviBot](https://b.viki.moe) 的精神继任者。
 
-框架提供了完备的状态监控、插件管理（支持热更新）、主副管理员机制、消息通知、请求处理功能以及友好的脚手架, 开箱即用。框架完全开源, 可扩展性强, 插件开发简单, 核心底层协议使用 [oicq](https://github.com/takayama-lily/oicq) v2, API 众多, 功能强大。另外, 框架使用 [node](https://nodejs.org/) 驱动, 得益于 node 及其高效的 v8 引擎, KiviBot 的性能可观。
+mioki 继承了 KiviBot 的轻量、优雅和易用的设计理念, 并在此基础上替换了底层通信库为 NapCat SDK, 提供了更现代化的 TypeScript 支持和更强大的功能扩展能力。
 
 本项目开发初衷在于提高群活跃氛围、方便群管理, 仅供个人娱乐、学习和交流使用, **不得将本项目用于任何非法用途**。
 
-## 为什么选择 KiviBot {#why}
+## 为什么选择 mioki {#why}
 
-- 🚲 **轻量**: 无需运行 UI, 内存占用低, 取决于设备状态、账号群聊数和活跃程度。
-
-- ⚡ **高效**: 框架开发语言和底层协议语言一致, 由 node 驱动, 执行效率高。
-
-- 📱 **跨平台**: Windows, Linux, 手机平板, 家用路由器和随身 WiFi 等都能运行。
-
-- 🔗 **多协议**: 支持安卓手机、安卓平板、iPad、安卓手表和 MacOS 协议。
-
-- 📦 **注重体验**: 一条 QQ 消息即可安装、启用或升级插件, 极致的用户体验。
-
-- 🚤 **极速开发**: 门槛低, 只需几行 JS/TS 代码和一点语言基础就能快速编写插件。
-
-- 💻 **开发者友好**: 插件支持热重载, 拥有友好的脚手架与完备的 TS 类型定义。
+- **KiviBot 继任者**：继承 KiviBot 的优良传统和设计理念。
+- **插件式架构**：支持热插拔插件，方便扩展功能。
+- **基于 NapCat**：利用 NapCat 的强大功能和稳定性。
+- **易于使用**：简洁的 API 设计，快速上手。
+- **TypeScript 支持**：提供类型定义，提升开发体验。
 
 更多特征等你探索...
 
 ## 插件示例 {#plugin-example}
 
-仅需编写少量 JavaScript 代码即可实现丰富功能, 参考下面的插件 Demo。
+仅需编写少量代码即可实现丰富功能, 比如一个简单关键词插件：
 
-::: warning 请注意
-框架仍处于**测试阶段**, 插件的 API 可能发生较大更改, 请勿用于生产环境。
-:::
 
-```js
-const { KiviPlugin, segment } = require('@kivibot/core')
+```ts
+import { definePlugin } from 'mioki'
 
-const plugin = new KiviPlugin('demo', '0.1.0')
+export default definePlugin({
+  name: 'words',
+  version: '1.0.0',
+  async setup(ctx) {
+    // 监听消息事件
+    ctx.handle('message', async (event) => {
+      // 通过原始消息内容进行匹配
+      if (event.raw_message === 'hello') {
+        // true 代表带回复消息
+        await event.reply('world', true)
+      }
 
-plugin.onMounted((bot, admins) => {
-  plugin.onMessage(event => {
-    const { raw_message } = event
-
-    if (raw_message === 'hello') {
-      const msgs = [segment.face(66), 'world']
-      event.reply(msgs)
-    }
-  })
+      // 或者更简单的扩展写法
+      ctx.match(event, {
+        测试: '不支持小处男测试～'
+        hello: 'world',
+        现在几点: () => new Date().toLocaleTimeString('zh-CN'),
+      })
+    })
+  },
 })
-
-module.exports = { plugin }
 ```
 
-详细插件 `API` 说明请参阅 [`KiviPlugin API`](/api/plugin)
+再比如一个简单的点赞插件：
+
+```ts
+import { definePlugin } from 'mioki'
+
+export default definePlugin({
+  name: 'like',
+  version: '1.0.0',
+  async setup(ctx) {
+    const { uin, nickname } = ctx.bot
+
+    ctx.logger.info(`插件已加载，当前登录账号：${nickname}（${uin}）`)
+
+    ctx.handle('message.group', async (event) => {
+      ctx.match(event,  {
+        赞我: async () => {
+          ctx.logger.info(`收到来自群 ${event.group_id} 的 ${event.user_id} 的点赞请求`)
+          
+          await ctx.bot.sendLike(event.user_id, 5)
+          await event.addReaction('66')
+          await event.reply(['已为您点赞 5 次', ctx.segment.face(66)], true)
+        },
+      })
+    })
+  },
+})
+```
