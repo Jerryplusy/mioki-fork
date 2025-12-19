@@ -1,8 +1,8 @@
 # mioki
 
-💓 A pluggable OneBot bot framework for NapCat, successor of KiviBot.
+💓 一个插件式的 NapCat OneBot 框架，KiviBot 的精神继任者。
 
-> [!CAUTION]
-> This project is still under active development. Use it at your own risk.
+> [!注意]
+> 本项目仍在积极开发中，使用需自担风险。
 
-More details see [GitHub](https://github.com/vikiboss/mioki)
+更多详情见 [GitHub](https://github.com/vikiboss/mioki)

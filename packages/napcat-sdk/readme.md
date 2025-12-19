@@ -1,69 +1,69 @@
 # NapCat SDK for TypeScript
 
-> More details see [GitHub](https://github.com/vikiboss/mioki)
+> 更多详情请查看 [GitHub](https://github.com/vikiboss/mioki)
 
-## Getting Started
+### 快速开始
 
-The NapCat SDK for TypeScript allows developers to easily integrate NapCat's functionalities into their TypeScript applications. This SDK provides a set of tools and utilities to interact with NapCat services seamlessly.
+NapCat SDK for TypeScript 允许开发者轻松地将 NapCat 的功能集成到他们的 TypeScript 应用中。该 SDK 提供了一套工具和实用程序，可以无缝地与 NapCat 服务进行交互。
 
-## Installation
+### 安装
 
-You can install the NapCat SDK via npm. Run the following command in your terminal:
+你可以通过 npm 安装 NapCat SDK。在终端中运行以下命令：
 
 ```bash
 pnpm install napcat-sdk
 ```
 
-## Quick Start
+### 快速开始
 
-To connect to NapCat, you need to create an instance of the NapCat client. Here's a simple example:
+要连接到 NapCat，你需要创建一个 NapCat 客户端实例。这是一个简单的示例：
 
 ```typescript
 import { NapCat, segment } from 'napcat-sdk'
 
-// 1. Create a new NapCat client instance
+// 1. 创建一个新的 NapCat 客户端实例
 const napcat = new NapCat({
-  // protocol: 'ws', // Optional: specify the protocol (default is 'ws')
-  // host: 'localhost', // Optional: specify a custom host
-  // port: 3333, // Optional: specify a custom port
-  token: 'here-your-auth-token', // Required: your authentication token
+  // protocol: 'ws', // 可选：指定协议（默认为 'ws'）
+  // host: 'localhost', // 可选：指定自定义主机
+  // port: 3333, // 可选：指定自定义端口
+  token: 'here-your-auth-token', // 必填：你的认证令牌
 })
 
-// 2. Subscribe to events
+// 2. 订阅事件
 napcat.on('message', (event) => {
-  // replay is a method to send a message quickly, optional with reply mark
-  event.reply('Hello from NapCat SDK!', true) // true is for reply mark
+  // reply 是一个快速发送消息的方法，可选带回复标记
+  event.reply('Hello from NapCat SDK!', true) // true 表示带回复标记
 
-  // you can call all the NapCat api through `napcat.api()` method
+  // 你可以通过 `napcat.api()` 方法调用所有 NapCat API
   const { value } = await napcat.api<{ value: unknown }>('awesome-function')
 })
 
-// you can also listen to specific message sub-types
+// 你也可以监听特定的消息子类型
 napcat.on('message.group', async (event) => {
-  // some methods of a message event are available
+  // 消息事件提供了一些可用的方法
   await event.setEssence(event.message_id)
   await event.recall()
 
-  // You can also interact with group instance to do some operations
+  // 你也可以与群实例交互来执行一些操作
   await event.group.setTitle(114514, 'Special Title')
 
-  // message to send is allowed to be an array of segments
+  // 要发送的消息可以是消息段数组
   await event.reply(['Hi! ', napcat.segment.face(66)])
 
-  // or just use napcat to send messages
+  // 或者直接使用 napcat 发送消息
   await napcat.sendGroupMsg(event.group_id, 'Hello Group!')
 })
 
-// and more events...
+// 更多事件...
 napcat.on('notice', (event) => {})
 napcat.on('notice.group', (event) => {})
 napcat.on('request', (event) => {})
 napcat.on('request.group.invite', (event) => {
-  // approve the group invite request, or event.reject() to reject
+  // 同意群邀请请求，或使用 event.reject() 拒绝
   event.approve() 
 })
 
-// close the connection when needed
+// 需要时关闭连接
 napcat.close() 
 ```
 
