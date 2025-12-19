@@ -559,10 +559,7 @@ ctx.createStore<T>(defaultData: T, options?: {
 **示例：**
 
 ```ts
-const store = await ctx.createStore(
-  { count: 0 },
-  { __dirname: import.meta.dirname }
-)
+const store = await ctx.createStore({ count: 0 }, { __dirname })
 
 store.data.count++
 await store.write()

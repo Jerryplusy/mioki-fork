@@ -354,16 +354,16 @@ task.start()
 ### 使用 createStore
 
 ```ts
+interface Store {
+  count: number
+  users: string[]
+}
+
 export default definePlugin({
   name: 'storage-demo',
   async setup(ctx) {
     // 创建持久化存储
-    const store = await ctx.createStore({
-      count: 0,
-      users: [] as string[],
-    }, {
-      __dirname: import.meta.dirname, // 存储在插件目录
-    })
+    const store = await ctx.createStore<Store>({count: 0, users: [] }, { __dirname })
 
     ctx.handle('message', async (e) => {
       if (e.raw_message === '计数') {
@@ -389,10 +389,8 @@ interface SigninData {
 export default definePlugin({
   name: 'signin',
   async setup(ctx) {
-    const db = await ctx.createDB<SigninData>(
-      ctx.path.join(import.meta.dirname, 'signin.json'),
-      { defaultData: {} }
-    )
+    const filePath = ctx.path.join(__dirname, 'signin.json')
+    const db = await ctx.createDB<SigninData>(filePath, { defaultData: {} })
 
     ctx.handle('message', async (e) => {
       if (e.raw_message !== '签到') return
@@ -472,9 +470,7 @@ export default definePlugin({
   name: 'signin',
   version: '1.0.0',
   async setup(ctx) {
-    const store = await ctx.createStore<SigninData>({}, {
-      __dirname: import.meta.dirname,
-    })
+    const store = await ctx.createStore<SigninData>({}, { __dirname })
 
     ctx.handle('message', async (e) => {
       if (e.raw_message !== '签到') return
@@ -534,11 +530,7 @@ export default definePlugin({
   name: 'keywords',
   version: '1.0.0',
   async setup(ctx) {
-    const store = await ctx.createStore<KeywordData>({
-      keywords: [],
-    }, {
-      __dirname: import.meta.dirname,
-    })
+    const store = await ctx.createStore<KeywordData>({ keywords: [] }, { __dirname })
 
     ctx.handle('message', async (e) => {
       const text = ctx.text(e)

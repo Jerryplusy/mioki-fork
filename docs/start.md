@@ -55,15 +55,6 @@ pnpm add mioki
 require('mioki').start({ cwd: __dirname })
 ```
 
-或者使用 ES Module 语法：
-
-```ts
-// app.ts
-import { start } from 'mioki'
-
-start({ cwd: import.meta.dirname })
-```
-
 ### 配置 mioki
 
 在 `package.json` 中添加 `mioki` 配置项：
