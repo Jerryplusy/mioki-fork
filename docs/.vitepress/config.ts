@@ -16,6 +16,9 @@ export default defineConfig({
   lastUpdated: true,
   themeConfig: {
     logo: '/logo.png',
+    search: {
+      provider: 'local',
+    },
     socialLinks: [
       {
         icon: 'github',
