@@ -12,7 +12,7 @@ export default definePlugin({
     // ctx.logger.info('group member info:', JSON.stringify(res))
 
     ctx.handle('notice', async (e) => {
-      ctx.logger.info(`received a notice: ${JSON.stringify(e)}`)
+      // ctx.logger.info(`received a notice: ${JSON.stringify(e)}`)
     })
 
     ctx.handle('request.friend', async (e) => {

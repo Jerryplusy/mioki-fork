@@ -191,8 +191,6 @@ export class NapCat {
 
         if (data.retcode === 0) {
           resolve(data.data as T)
-        } else if (data.retcode === 1200) {
-          reject('API 错误：发送失败，请先添加对方为好友')
         } else {
           reject(`API 错误：${data.message}`)
         }
@@ -591,8 +589,13 @@ export class NapCat {
   /**
    * 给好友名片点赞
    */
-  sendLike(user_id: number, times: number = 1): Promise<void> {
-    return this.api<void>('send_like', { user_id, times })
+  async sendLike(user_id: number, times: number = 1): Promise<any> {
+    try {
+      await this.api<void>('send_like', { user_id, times })
+      return true
+    } catch {
+      return false
+    }
   }
 
   /**
