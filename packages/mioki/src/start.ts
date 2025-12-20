@@ -152,10 +152,11 @@ export async function start(options: StartOptions = {}): Promise<void> {
 
     try {
       // 加载内置插件
-      napcat.logger.info(`>>> 加载 mioki 内置插件: ${BUILTIN_PLUGINS.map((p) => colors.cyan(p.name)).join(', ')}`)
+      napcat.logger.info(`>>> 加载内置插件: ${BUILTIN_PLUGINS.map((p) => colors.cyan(p.name)).join(', ')}`)
       await Promise.all(BUILTIN_PLUGINS.map((p) => enablePlugin(napcat, p, 'builtin')))
 
       // 按优先级分组并行加载用户插件，相同优先级的插件可以并行加载
+      napcat.logger.info(`>>> 加载用户插件: ${sortedGroups.map(([priority, plugins]) => `优先级 ${colors.yellow(priority)} (${plugins.map((p) => colors.cyan(p.name)).join(', ')})`).join('，')}`)
       for (const [_, plugins] of sortedGroups) {
         await Promise.all(
           plugins.map(async (p) => {
