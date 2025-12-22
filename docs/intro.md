@@ -27,7 +27,7 @@ mioki 继承了 KiviBot 的轻量、优雅和易用的设计理念，并在此�
 
 ## 插件示例 {#plugin-example}
 
-仅需编写少量代码即可实现丰富功能，比如一个简单的关键词回复插件：
+仅需编写少量代码即可实现丰富功能，比如：
 
 ```ts
 import { definePlugin } from 'mioki'
@@ -36,49 +36,56 @@ export default definePlugin({
   name: 'words',
   version: '1.0.0',
   async setup(ctx) {
-    // 处理消息
+    ctx.logger.info('插件 Words 已加载！')
+    ctx.logger.info(`当前登录账号: ${ctx.bot.nickname}（${ctx.bot.uin}）`)
+
     ctx.handle('message', async (event) => {
-      // 通过原始消息内容进行匹配
-      if (event.raw_message === 'hello') {
-        // true 代表引用回复
-        await event.reply('world', true)
-      }
+      ctx.match(
+        event,
+        {
+          hello: 'world',
 
-      // 或者更简单的扩展写法
-      ctx.match(event, {
-        测试: '不支持小处男测试～',
-        hello: 'world',
-        现在几点: () => new Date().toLocaleTimeString('zh-CN'),
-      })
-    })
-  },
-})
-```
+          现在几点: () => new Date().toLocaleTimeString('zh-CN'),
 
-再比如一个简单的点赞插件：
+          赞我: async () => {
+            await ctx.bot.sendLike(event.user_id, 10)
+            return ['已为您点赞 10 次', ctx.segment.face(66)]
+          },
 
-```ts
-import { definePlugin } from 'mioki'
+          '我要头衔*': async (matches, event) => {
+            if (event.message_type !== 'group') return
 
-export default definePlugin({
-  name: 'like',
-  version: '1.0.0',
-  async setup(ctx) {
-    const { uin, nickname } = ctx.bot
+            const title = matches[0].slice(4)
+            await event.group.setTitle(event.user_id, title)
+            return `头衔已设置：${title}`
+          },
 
-    ctx.logger.info(`插件已加载，当前登录账号：${nickname}（${uin}）`)
+          '查信息*': async (matches) => {
+            const uin = Number(matches[0].slice(3))
+            if (!uin || isNaN(uin)) return '请输入正确的 QQ 号'
+            const info = await ctx.bot.getStrangerInfo(uin)
+            return JSON.stringify(info, null, 2)
+          },
 
-    ctx.handle('message.group', async (event) => {
-      ctx.match(event, {
-        赞我: async () => {
-          ctx.logger.info(`收到来自群 ${event.group_id} 的 ${event.user_id} 的点赞请求`)
+          '*油价': async (matches) => {
+            const region = matches[0].slice(0, -2) || '北京'
+            const api = `https://60s.viki.moe/v2/fuel-price?region=${encodeURIComponent(region)}&encoding=text`
+            return await (await fetch(api)).text()
+          },
 
-          await ctx.bot.sendLike(event.user_id, 10)
-          await event.addReaction('66')
-          await event.reply(['已为您点赞 10 次', ctx.segment.face(66)], true)
+          '/^\\s(?<city>.{2,10})天气$/': async (matches) => {
+            const city = matches.groups?.city || '北京'
+            const api = `https://60s.viki.moe/v2/weather/realtime?query=${encodeURIComponent(city)}&encoding=text`
+            return await (await fetch(api)).text()
+          },
         },
-      })
+        true,
+      )
     })
+
+    return () => {
+      ctx.logger.info('插件 Words 已卸载！')
+    }
   },
 })
 ```
