@@ -53,11 +53,7 @@ export async function noticeFriends(
   }
 
   for (const friendId of friendIdList) {
-    const friend = await bot.pickFriend(friendId)
-
-    if (!friend) continue
-
-    await friend.sendMsg(message)
+    await bot.sendPrivateMsg(friendId, message)
     await utils.wait(delay)
   }
 }
@@ -93,7 +89,7 @@ export async function noticeMainOwner(bot: NapCat, message?: Sendable | null): P
   const mainOwner = botConfig.owners[0]
 
   if (mainOwner) {
-    await (await bot.pickFriend(mainOwner))?.sendMsg(message)
+    await bot.sendPrivateMsg(mainOwner, message)
     return
   }
 

@@ -538,7 +538,7 @@ export class NapCat {
     } catch (err: any) {
       this.logger.warn(`获取好友 ${user_id} 信息失败：${err?.message || err}`)
       // return this.#buildFriend(user_id, '', {}) as FriendWithInfo
-      return null
+      return this.#buildFriend(user_id, '-', {}) as FriendWithInfo
     }
   }
 
