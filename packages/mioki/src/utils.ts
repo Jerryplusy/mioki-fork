@@ -181,30 +181,73 @@ export function formatDuration(ms: number): string {
   return `${seconds}秒`
 }
 
-type MatchPatternItem = null | undefined | void | false | Sendable
-
+type MatchPatternItem = null | undefined | void | false | Sendable | Sendable[]
+type MatchValue<E extends MessageEvent> =
+  | MatchPatternItem
+  | ((matches: RegExpMatchArray, event: E) => MatchPatternItem)
+  | ((matches: RegExpMatchArray, event: E) => Promise<MatchPatternItem>)
 /**
  * 匹配输入文本与匹配模式，如果匹配成功，则回复匹配结果
+ *
+ * 支持：
+ * - 精确匹配
+ * - 正则表达式匹配（以 `/` 开头和结尾的字符串）
+ * - 通配符匹配（使用 `*` 作为通配符）
  *
  * @param event 消息事件
  * @param pattern 匹配模式
  * @param quote 是否引用回复
  * @returns 匹配结果
  */
-export async function match(
-  event: MessageEvent,
-  pattern: Record<string, MatchPatternItem | (() => MatchPatternItem) | (() => Promise<MatchPatternItem>)>,
+export async function match<E extends MessageEvent>(
+  event: E,
+  pattern: Record<string, MatchValue<E>>,
   quote: boolean = true,
 ): Promise<{ message_id: number } | null> {
   const inputText = text(event)
 
-  for (const [key, value] of Object.entries(pattern)) {
-    if (key === inputText) {
-      const res = await (typeof value === 'function' ? value() : value)
+  async function handleMatch(key: string, value: MatchValue<E>) {
+    let isMatched = false
+    let matches: RegExpMatchArray | null = null
 
-      if (res) {
-        return event.reply(res, quote)
+    const isRegExpLikeString = key.match(/^\/.+\/$/)
+    const hasWildcard = key.includes('*')
+
+    if (isRegExpLikeString) {
+      try {
+        const regex = new RegExp(key.slice(1, -1))
+        const matchesValue = inputText.match(regex)
+
+        if (matchesValue) {
+          isMatched = true
+          matches = matchesValue
+        }
+      } catch (err) {
+        throw new Error(`无效的正则表达式: ${key}`, { cause: err })
       }
+    } else if (hasWildcard) {
+      const regexPattern = `^${key.replace(/\./g, '\\.').replace(/\*/g, '.*')}$`
+      const regex = new RegExp(regexPattern)
+      const matchesValue = inputText.match(regex)
+
+      if (matchesValue) {
+        isMatched = true
+        matches = matchesValue
+      }
+    } else if (key === inputText) {
+      isMatched = true
+    }
+
+    if (isMatched) {
+      return typeof value === 'function' ? await value(matches as RegExpMatchArray, event) : value
+    }
+  }
+
+  for (const [key, value] of Object.entries(pattern)) {
+    const result = await handleMatch(key, value)
+
+    if (result) {
+      return event.reply(result, quote)
     }
   }
 

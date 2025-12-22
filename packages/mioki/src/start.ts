@@ -156,7 +156,9 @@ export async function start(options: StartOptions = {}): Promise<void> {
       await Promise.all(BUILTIN_PLUGINS.map((p) => enablePlugin(napcat, p, 'builtin')))
 
       // 按优先级分组并行加载用户插件，相同优先级的插件可以并行加载
-      napcat.logger.info(`>>> 加载用户插件: ${sortedGroups.map(([priority, plugins]) => `优先级 ${colors.yellow(priority)} (${plugins.map((p) => colors.cyan(p.name)).join(', ')})`).join('，')}`)
+      napcat.logger.info(
+        `>>> 加载用户插件: ${sortedGroups.map(([priority, plugins]) => `优先级 ${colors.yellow(priority)} (${plugins.map((p) => colors.cyan(p.name)).join(', ')})`).join('，')}`,
+      )
       for (const [_, plugins] of sortedGroups) {
         await Promise.all(
           plugins.map(async (p) => {
@@ -188,7 +190,11 @@ export async function start(options: StartOptions = {}): Promise<void> {
       `成功加载了 ${colors.green(runtimePlugins.size)} 个插件，${failedInfo ? failedInfo : ''}总耗时 ${colors.green(costTime.toFixed(2))} 毫秒`,
     )
 
-    napcat.logger.info(colors.green(`mioki v${version} 启动完成，祝您使用愉快 🎉️`))
+    napcat.logger.info(
+      colors.green(
+        `mioki v${version} 启动完成，向机器人发送「${colors.magentaBright(`${cfg.botConfig.prefix}帮助`)}」查看消息指令`,
+      ),
+    )
 
     if (cfg.botConfig.online_push) {
       await actions.noticeMainOwner(napcat, `✅ mioki v${version} 已就绪`).catch((err) => {
