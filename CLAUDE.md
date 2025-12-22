@@ -12,7 +12,7 @@ Mioki is a QQ bot framework built on NapCat and TypeScript, providing a simple p
 ## Common Commands
 
 ### Development
-```bash
+```sh
 # Start development mode (watches all packages)
 pnpm dev
 
@@ -24,7 +24,7 @@ pnpm start
 ```
 
 ### Package-Specific Commands
-```bash
+```sh
 # Work on mioki package
 pnpm --filter mioki run dev
 pnpm --filter mioki run build
@@ -35,7 +35,7 @@ pnpm --filter napcat-sdk run build
 ```
 
 ### Release
-```bash
+```sh
 # Bump version and create release
 pnpm release
 

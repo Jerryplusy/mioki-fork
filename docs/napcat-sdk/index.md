@@ -16,7 +16,7 @@ NapCat SDK 是 mioki 框架的底层通信库，提供了与 [NapCat](https://na
 
 ## 安装 {#installation}
 
-```bash
+```sh
 # pnpm
 pnpm add napcat-sdk
 

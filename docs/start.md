@@ -7,7 +7,6 @@
 在开始之前，请确保你的环境满足以下条件：
 
 - **Node.js**：版本 >= 22.18.0（可以直接运行 TS，推荐使用 LTS 版本）
-- **pnpm**：推荐使用 pnpm 作为包管理器（也支持 npm、yarn、bun 等）
 - **NapCat**：已部署并运行的 [NapCat](https://napneko.github.io/) 实例
 
 ## 安装 NapCat {#install-napcat}
@@ -16,7 +15,7 @@ mioki 依赖 NapCat 作为 QQ 协议端，请先参考 [NapCat 官方文档](htt
 
 配置 NapCat 时，请确保：
 
-1. 开启 **正向 WebSocket** 服务
+1. 创建一个 **正向 WebSocket** 服务器
 2. 记录 WebSocket 服务的 **端口号** 和 **访问令牌（token）**
 
 ## 创建项目 {#create-project}
@@ -25,9 +24,21 @@ mioki 依赖 NapCat 作为 QQ 协议端，请先参考 [NapCat 官方文档](htt
 
 mioki 提供了交互式命令行工具，帮助你快速创建项目。只需一条命令即可完成项目初始化：
 
-```bash
-npx mioki@latest
+::: code-group
+
+```sh [npm]
+$ npx mioki@latest
 ```
+
+```sh [pnpm]
+$ pnpx mioki@latest
+```
+
+```sh [yarn]
+$ yarn dlx mioki@latest
+```
+
+:::
 
 CLI 会引导你完成以下配置：
 
@@ -40,7 +51,7 @@ CLI 会引导你完成以下配置：
 
 你也可以通过命令行参数预先指定配置，跳过交互式提问：
 
-```bash
+```sh
 npx mioki@latest [选项]
 ```
 
@@ -62,19 +73,19 @@ npx mioki@latest [选项]
 
 **交互式创建**（推荐新手）：
 
-```bash
+```sh
 npx mioki@latest
 ```
 
 **一键创建**（跳过所有交互）：
 
-```bash
+```sh
 npx mioki@latest --name my-bot --token abc123 --owners 123456789
 ```
 
 **完整参数示例**：
 
-```bash
+```sh
 npx mioki@latest \
   --name my-bot \
   --protocol ws \
@@ -89,13 +100,13 @@ npx mioki@latest \
 
 **查看帮助**：
 
-```bash
+```sh
 npx mioki --help
 ```
 
 创建完成后，CLI 会输出引导信息，按照提示启动机器人：
 
-```bash
+```sh
 cd my-bot && npm install && npm start
 ```
 
@@ -105,7 +116,7 @@ cd my-bot && npm install && npm start
 
 #### 初始化项目目录
 
-```bash
+```sh
 # 创建项目目录
 mkdir my-bot && cd my-bot
 
@@ -115,7 +126,7 @@ npm init
 
 #### 安装 mioki
 
-```bash
+```sh
 npm add mioki
 ```
 
@@ -180,7 +191,7 @@ require('mioki').start({ cwd: __dirname })
 
 确保 NapCat 实例已启动并登录成功后，运行以下命令启动 mioki：
 
-```bash
+```sh
 pnpm start
 ```
 

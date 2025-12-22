@@ -36,7 +36,7 @@ export default definePlugin({
   name: 'words',
   version: '1.0.0',
   async setup(ctx) {
-    // 监听消息事件
+    // 处理消息
     ctx.handle('message', async (event) => {
       // 通过原始消息内容进行匹配
       if (event.raw_message === 'hello') {
@@ -73,9 +73,9 @@ export default definePlugin({
         赞我: async () => {
           ctx.logger.info(`收到来自群 ${event.group_id} 的 ${event.user_id} 的点赞请求`)
 
-          await ctx.bot.sendLike(event.user_id, 5)
+          await ctx.bot.sendLike(event.user_id, 10)
           await event.addReaction('66')
-          await event.reply(['已为您点赞 5 次', ctx.segment.face(66)], true)
+          await event.reply(['已为您点赞 10 次', ctx.segment.face(66)], true)
         },
       })
     })
