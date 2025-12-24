@@ -36,14 +36,14 @@ export default definePlugin({
           },
 
           '*油价': async (matches) => {
-            const region = matches[0].slice(0, -2) || '北京'
-            const api = `https://60s.viki.moe/v2/fuel-price?region=${encodeURIComponent(region)}&encoding=text`
+            const regionEncoded = encodeURIComponent(matches[0].slice(0, -2) || '北京')
+            const api = `https://60s.viki.moe/v2/fuel-price?region=${regionEncoded}&encoding=text`
             return await (await fetch(api)).text()
           },
 
           '/^(?<city>.{2,10})天气$/': async (matches) => {
-            const city = matches.groups?.city || '北京'
-            const api = `https://60s.viki.moe/v2/weather/realtime?query=${encodeURIComponent(city)}&encoding=text`
+            const cityEncoded = encodeURIComponent(matches.groups?.city || '北京')
+            const api = `https://60s.viki.moe/v2/weather/realtime?query=${cityEncoded}&encoding=text`
             return await (await fetch(api)).text()
           },
         },

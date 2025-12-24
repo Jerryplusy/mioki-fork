@@ -1,6 +1,8 @@
 import type { Logger } from './logger'
 import type { NapCat } from './napcat'
 
+export type Arrayable<T> = T | T[]
+
 export interface Stat {
   /** 启动时间，Unix 时间戳（毫秒） */
   start_time: number

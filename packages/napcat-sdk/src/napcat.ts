@@ -8,6 +8,7 @@ import type { Emitter } from 'mitt'
 import type { Logger } from './logger'
 import type {
   API,
+  Arrayable,
   EventMap,
   Friend,
   FriendWithInfo,
