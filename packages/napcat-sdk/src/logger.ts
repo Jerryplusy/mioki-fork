@@ -14,10 +14,12 @@ export const ABSTRACT_LOGGER: Logger = {
   trace: noop,
 }
 
+const time = () => styleText('dim', `[${new Date().toLocaleTimeString()}]`)
+
 export const CONSOLE_LOGGER: Logger = {
-  error: console.error.bind(console, styleText('redBright', '[ERROR]')),
-  warn: console.warn.bind(console, styleText('yellowBright', '[WARN]')),
-  info: console.info.bind(console, styleText('greenBright', '[INFO]')),
-  debug: console.debug.bind(console, styleText('blueBright', '[DEBUG]')),
-  trace: console.debug.bind(console, styleText('dim', '[TRACE]')),
+  error: (...args: any[]) => console.error(`${time()} ${styleText('redBright', '[ERROR]')}`, ...args),
+  warn: (...args: any[]) => console.warn(`${time()} ${styleText('yellowBright', '[WARN]')}`, ...args),
+  info: (...args: any[]) => console.info(`${time()} ${styleText('greenBright', '[INFO]')}`, ...args),
+  debug: (...args: any[]) => console.debug(`${time()} ${styleText('blueBright', '[DEBUG]')}`, ...args),
+  trace: (...args: any[]) => console.debug(`${time()} ${styleText('dim', '[TRACE]')}`, ...args),
 }

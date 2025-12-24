@@ -48,11 +48,11 @@ export function getMiokiLogger(level: LogLevel): Logger {
             logObj.message ||
               logObj.args
                 ?.map((e) => (typeof e === 'string' ? e : util.inspect(e, { colors: true, depth: null })))
-                .join(' ') ||
+                .join('') ||
               '',
           )
 
-          const prefix = `[${logObj.date.toISOString()}] [${LEVEL_MAP[logObj.level].name}] ${logObj.tag ? `[${logObj.tag}] ` : ''}`
+          const prefix = `[${logObj.date.toISOString()}] [${LEVEL_MAP[logObj.level].name}] ${logObj.tag ? `[${logObj.tag}]` : ''}`
           const line = `${prefix}${message}`
           fs.appendFileSync(logFile, line + '\n')
         },
@@ -61,7 +61,7 @@ export function getMiokiLogger(level: LogLevel): Logger {
         log: (logObj) => {
           const time = colors.gray(`[${logObj.date.toLocaleTimeString('zh-CN')}]`)
           const level = colors.bold(colors[LEVEL_MAP[logObj.level].color](LEVEL_MAP[logObj.level].name))
-          const tag = logObj.tag ? colors.dim(`[${logObj.tag}] `) : ''
+          const tag = logObj.tag ? colors.dim(`[${logObj.tag}]`) : ''
 
           const message =
             logObj.message ||
