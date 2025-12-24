@@ -791,8 +791,122 @@ ctx.services.myService.doSomething()
 
 ```ts
 ctx.services.myService
-ctx.services.miokiStatus() // 内置服务：获取框架状态
+ctx.services.getMiokiStatus() // 内置服务：获取框架状态
 ```
+
+## 内置服务 {#builtin-services}
+
+mioki-core 插件提供了以下内置服务，可通过 `ctx.services` 直接使用。
+
+### getMiokiStatus()
+
+获取框架和系统的实时状态信息。
+
+```ts
+const status = await ctx.services.getMiokiStatus()
+```
+
+**返回值：** `MiokiStatus` 对象，包含以下信息：
+
+| 属性 | 说明 |
+| --- | --- |
+| `bot` | 机器人信息（QQ号、昵称、好友数、群数） |
+| `plugins` | 插件状态（启用数、总数） |
+| `stats` | 运行统计（运行时间、收发消息数） |
+| `versions` | 版本信息（Node、mioki、NapCat、协议） |
+| `system` | 系统信息（名称、版本、架构） |
+| `memory` | 内存使用情况 |
+| `disk` | 磁盘使用情况 |
+| `cpu` | CPU 信息及使用率 |
+
+### formatMiokiStatus()
+
+将状态对象格式化为可读的文本字符串。
+
+```ts
+const status = await ctx.services.getMiokiStatus()
+const text = await ctx.services.formatMiokiStatus(status)
+```
+
+### customFormatMiokiStatus() {#custom-format-status}
+
+自定义 `#状态` 命令的输出格式，支持返回文本、图片等任意消息类型。
+
+```ts
+ctx.services.customFormatMiokiStatus(formatter: StatusFormatter): void
+```
+
+**参数：**
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `formatter` | `StatusFormatter` | 自定义格式化函数 |
+
+**StatusFormatter 类型：**
+
+```ts
+type StatusFormatter = (status: MiokiStatus) => Awaitable<Arrayable<Sendable>>
+```
+
+返回值可以是：
+- 字符串（文本消息）
+- 消息段对象（图片、语音等）
+- 消息段数组（组合多种类型）
+
+**示例：**
+
+::: code-group
+
+```ts [基础：自定义文本]
+export default definePlugin({
+  name: 'custom-status',
+  setup(ctx) {
+    ctx.services.customFormatMiokiStatus((status) => {
+      return `🤖 ${status.bot.nickname}
+📊 运行时长: ${prettyMs(status.stats.uptime)}
+💾 内存: ${status.memory.percent}%
+🔌 插件: ${status.plugins.enabled}/${status.plugins.total}`
+    })
+  }
+})
+```
+
+```ts [进阶：返回图片]
+export default definePlugin({
+  name: 'image-status',
+  setup(ctx) {
+    ctx.services.customFormatMiokiStatus(async (status) => {
+      // 使用渲染插件生成图片
+      const imageUrl = await renderStatusImage(status)
+      return ctx.segment.image(imageUrl)
+    })
+  }
+})
+```
+
+```ts [高级：组合消息]
+export default definePlugin({
+  name: 'rich-status',
+  setup(ctx) {
+    ctx.services.customFormatMiokiStatus(async (status) => {
+      const image = await renderStatusImage(status)
+      return [
+        ctx.segment.image(image),
+        ctx.segment.text(`\n详细信息: ${status.bot.nickname}`)
+      ]
+    })
+  }
+})
+```
+
+:::
+
+::: tip 💡 使用场景
+- **自定义文本格式**：调整状态信息的展示样式和内容
+- **图片状态卡片**：结合渲染插件生成美观的状态图片
+- **多语言支持**：根据配置返回不同语言的状态信息
+- **隐藏敏感信息**：过滤掉不想展示的系统信息
+:::
 
 ## 下一步 {#next-steps}
 

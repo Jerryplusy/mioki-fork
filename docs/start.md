@@ -62,6 +62,7 @@ CLI 会依次引导你完成项目名称、NapCat 连接配置、权限设置等
 | `plugins_dir`     | `string`   | `plugins`   | 插件目录路径                               |
 | `error_push`      | `boolean`  | `false`     | 是否将未捕获的错误推送给主人               |
 | `online_push`     | `boolean`  | `false`     | 机器人上线时是否通知主人                   |
+| `status_permission` | `string` | -           | 状态命令权限：`admin-only` 仅管理可用，默认所有人 |
 | `napcat.token`    | `string`   | -           | NapCat WebSocket 访问密钥                  |
 | `napcat.protocol` | `string`   | `ws`        | WebSocket 协议：`ws` 或 `wss`，默认 ws     |
 | `napcat.host`     | `string`   | `localhost` | NapCat WebSocket 服务地址，默认 localhost  |
