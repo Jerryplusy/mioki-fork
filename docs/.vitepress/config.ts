@@ -73,6 +73,7 @@ export default defineConfig({
     lastUpdatedText: '上次更新',
     editLink: {
       pattern: 'https://github.com/vikiboss/mioki/edit/main/docs/:path',
+      text: '在 GitHub 上编辑此页',
     },
     docFooter: {
       prev: '上一页',
