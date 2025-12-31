@@ -823,7 +823,7 @@ export class NapCat {
     const { cookies: cookieString, bkn } = await this.getNapCatCookies(domain)
 
     const skey = cookieString.match(/skey=([^;]*)/)?.[1] || ''
-    const pskey = cookieString.match(/pskey=([^;]*)/)?.[1] || ''
+    const pskey = cookieString.match(/p_skey=([^;]*)/)?.[1] || ''
     const gtk = this.getGTk(pskey)
 
     const returns = {
