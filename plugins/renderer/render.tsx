@@ -1,9 +1,9 @@
 import sharp from 'sharp'
+import * as React from 'react'
 import { Suspense, use } from 'react'
 import { fs, path, wait } from 'mioki'
 import { renderToReadableStream } from 'react-dom/server'
 
-import type * as React from 'react'
 import type { Arrayable } from 'mioki'
 import type * as puppeteer from 'puppeteer-core'
 import type { BrowserPool } from './browser-pool'
