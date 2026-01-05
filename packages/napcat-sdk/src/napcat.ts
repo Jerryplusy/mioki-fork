@@ -223,6 +223,8 @@ export class NapCat {
       recall: this.recallMsg.bind(this),
       ban: this.setGroupBan.bind(this, group_id),
       sendMsg: this.sendGroupMsg.bind(this, group_id),
+      pickMember: this.getGroupMemberInfo.bind(this, group_id),
+      kick: this.kickGroupMember.bind(this, group_id),
     }
   }
 
@@ -763,6 +765,13 @@ export class NapCat {
    */
   getGroupMemberInfo(group_id: number, user_id: number): Promise<GroupMemberInfo> {
     return this.api<GroupMemberInfo>('get_group_member_info', { group_id, user_id })
+  }
+
+  /**
+   * 踢出群成员
+   */
+  kickGroupMember(group_id: number, user_id: number, reject_add_request: boolean = false): Promise<void> {
+    return this.api<void>('set_group_kick', { group_id, user_id, reject_add_request })
   }
 
   /**

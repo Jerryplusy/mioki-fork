@@ -581,6 +581,10 @@ export interface Group {
   ban: (user_id: number, duration: number) => Promise<any>
   /** 发送群消息 */
   sendMsg: SendMsg
+  /** 获取群成员信息 */
+  pickMember: (user_id: number) => Promise<GroupMemberInfo>
+  /** 踢出群成员 */
+  kick: (user_id: number, reject_add_request?: boolean) => Promise<void>
 }
 
 export type GroupWithInfo = Group & Awaited<ReturnType<Group['getInfo']>>

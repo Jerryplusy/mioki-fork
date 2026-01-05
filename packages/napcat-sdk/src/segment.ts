@@ -11,7 +11,7 @@ export const segment = {
   /** 创建一个文本消息片段 */
   text: (text: string): SendElement => createSegment('text', { text }),
   /** 创建一个艾特消息片段 */
-  at: (qq: 'all' | (string & {})): SendElement => createSegment('at', { qq }),
+  at: (qq: 'all' | (string & {}) | number): SendElement => createSegment('at', { qq }),
   /** 创建一个 QQ 表情消息片段 */
   face: (id: number): SendElement => createSegment('face', { id }),
   /** 创建一个回复消息片段 */
