@@ -51,6 +51,10 @@ export class NapCat {
   #online: boolean = false
   /** nickname 缓存 */
   #nicknameCache = new Map<number, string>()
+  /** friend 缓存 */
+  #friendCache = new Map<number, Friend>()
+  /** group 缓存 */
+  #groupCache = new Map<number, Group>()
   /** 消息数据 */
   #stat: Stat = {
     start_time: Date.now(),
@@ -206,8 +210,25 @@ export class NapCat {
   }
 
   /** 构建群对象 */
-  #buildGroup<T extends object>(group_id: number, group_name: string = '', extraInfo: T = {} as T): Group & T {
-    return {
+  #buildGroup<T extends object>(
+    group_id: number,
+    group_name: string = '',
+    extraInfo: T = {} as T,
+    forceUpdate = false,
+  ): Group & T {
+    const cache = this.#groupCache.get(group_id)
+
+    if (cache) {
+      if (!forceUpdate) {
+        return cache as Group & T
+      }
+
+      clearTimeout((cache as any).__timeout_id__)
+    }
+
+    const timer = setTimeout(() => this.#groupCache.delete(group_id), 1000 * 60 * 10) // 10 分钟后清除缓存
+
+    const group = {
       ...extraInfo,
       group_id,
       group_name,
@@ -225,15 +246,37 @@ export class NapCat {
       sendMsg: this.sendGroupMsg.bind(this, group_id),
       pickMember: this.getGroupMemberInfo.bind(this, group_id),
       kick: this.kickGroupMember.bind(this, group_id),
+      __timeout_id__: timer,
     }
+
+    this.#groupCache.set(group_id, group)
+
+    return group
   }
 
   /** 构建好友对象 */
-  #buildFriend<T extends object>(user_id: number, nickname: string = '', extraInfo: T = {} as T): Friend & T {
-    const name = nickname || this.#nicknameCache.get(user_id) || ''
+  #buildFriend<T extends object>(
+    user_id: number,
+    nickname: string = '',
+    extraInfo: T = {} as T,
+    forceUpdate = false,
+  ): Friend & T {
+    const cache = this.#friendCache.get(user_id)
+
+    const name = nickname || this.#nicknameCache.get(user_id) || cache?.nickname || ''
     this.#nicknameCache.set(user_id, name)
 
-    return {
+    if (cache) {
+      if (!forceUpdate) {
+        return cache as Friend & T
+      }
+
+      clearTimeout((cache as any).__timeout_id__)
+    }
+
+    const id = setTimeout(() => this.#friendCache.delete(user_id), 1000 * 60 * 10) // 10 分钟后清除缓存
+
+    const friend = {
       ...extraInfo,
       user_id,
       nickname: name,
@@ -241,7 +284,12 @@ export class NapCat {
       delete: this.deleteFriend.bind(this, user_id),
       sendMsg: this.sendPrivateMsg.bind(this, user_id),
       getInfo: this.getStrangerInfo.bind(this, user_id),
+      __timeout_id__: id,
     }
+
+    this.#friendCache.set(user_id, friend)
+
+    return friend
   }
 
   #transformOneBotMessage(message: any[]): RecvElement[] {
@@ -527,21 +575,33 @@ export class NapCat {
   }
 
   /** 获取一个群的信息，可以用于发送群消息等操作 */
-  async pickGroup(group_id: number): Promise<GroupWithInfo | null> {
+  async pickGroup(group_id: number, forceUpdate: boolean = false): Promise<GroupWithInfo | null> {
     try {
+      const cache = this.#groupCache.get(group_id)
+
+      if (cache && !forceUpdate && 'member_count' in cache) {
+        return cache as GroupWithInfo
+      }
+
       const groupInfo = await this.api<ReturnType<Group['getInfo']>>('get_group_info', { group_id })
-      return this.#buildGroup(group_id, groupInfo.group_name, groupInfo)
+      return this.#buildGroup(group_id, groupInfo.group_name, groupInfo, true)
     } catch (err: any) {
       this.logger.warn(`获取群 ${group_id} 信息失败: ${err?.message || err}`)
-      return null
+      return this.#buildGroup(group_id, '-', {}) as GroupWithInfo
     }
   }
 
   /** 获取一个好友的信息，可以用于发送私聊消息等操作 */
   async pickFriend(user_id: number): Promise<FriendWithInfo | null> {
     try {
+      const cache = this.#friendCache.get(user_id)
+
+      if (cache && 'uin' in cache) {
+        return cache as FriendWithInfo
+      }
+
       const friendInfo = await this.api<ReturnType<Friend['getInfo']>>('get_stranger_info', { user_id })
-      return this.#buildFriend(user_id, friendInfo.nickname, friendInfo)
+      return this.#buildFriend(user_id, friendInfo.nickname, friendInfo, true)
     } catch (err: any) {
       this.logger.warn(`获取好友 ${user_id} 信息失败: ${err?.message || err}`)
       // return this.#buildFriend(user_id, '', {}) as FriendWithInfo
