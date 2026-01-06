@@ -15,7 +15,8 @@
     ],
     "admins": [],
     "plugins": [
-      "like"
+      "like",
+      "qzone"
     ],
     "log_level": "info",
     "plugins_dir": "../plugins",

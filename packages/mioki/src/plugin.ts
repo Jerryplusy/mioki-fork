@@ -157,7 +157,7 @@ export async function enablePlugin(
     const context: MiokiContext = {
       bot,
       segment: bot.segment,
-      getCookie: bot.getCookie,
+      getCookie: bot.getCookie.bind(bot),
       ...utilsExports,
       ...configExports,
       ...buildRemovedActions(bot),

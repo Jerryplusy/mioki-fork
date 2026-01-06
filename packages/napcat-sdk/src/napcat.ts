@@ -409,7 +409,7 @@ export class NapCat {
             case 'private': {
               this.#event.emit('message.private', data)
               this.#event.emit(`message.private.${data.sub_type}`, data)
-              const { friend: _, ...rest } = data.friend
+              const { friend: _, ...rest } = data
               this.logger.trace(`收到私聊消息: ${JSON.stringify(rest)}`)
               this.logger.info(`[私:${sender}] ${msg}`)
               break
@@ -418,7 +418,7 @@ export class NapCat {
             case 'group': {
               this.#event.emit('message.group', data)
               this.#event.emit(`message.group.${data.sub_type}`, data)
-              const { group: _, ...rest } = data.group
+              const { group: _, ...rest } = data
               this.logger.trace(`收到群消息: ${JSON.stringify(rest)}`)
               this.logger.info(`[群:${group}] ${sender}: ${msg}`)
               break
