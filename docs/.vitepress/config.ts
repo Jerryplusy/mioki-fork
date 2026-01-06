@@ -8,7 +8,7 @@ const isDev = process.env.NODE_ENV !== 'production'
 export default defineConfig({
   title: 'mioki',
   lang: 'zh-CN',
-  description: '💓 基于 NapCat 的插件式 OneBot 机器人框架，KiviBot 的精神继承者。',
+  description: '💓 基于 NapCat 的插件式 OneBot 机器人框架，KiviBot 的精神继任者。',
   lastUpdated: true,
   sitemap: {
     hostname: 'https://mioki.viki.moe',
