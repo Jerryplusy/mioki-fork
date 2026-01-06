@@ -10,10 +10,8 @@ export default defineConfig({
   lang: 'zh-CN',
   description: '💓 基于 NapCat 的插件式 OneBot 机器人框架，KiviBot 的精神继任者。',
   lastUpdated: true,
-  sitemap: {
-    hostname: 'https://mioki.viki.moe',
-  },
-  head: [['link', { rel: 'icon', type: 'image/png', href: '/logo.png' }]],
+  sitemap: { hostname: 'https://mioki.viki.moe' },
+  head: [['link', { rel: 'icon', type: 'image/png', href: '/favicon.ico' }]],
   markdown: {
     theme: 'one-dark-pro',
     config(md) {
