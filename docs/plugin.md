@@ -54,8 +54,14 @@ plugins/
 export default definePlugin({
   name: 'demo',
   setup(ctx) {
-    // 机器人实例
+    // 机器人实例（当前处理事件的 bot）
     ctx.bot // NapCat 实例
+
+    // 所有已连接的 bot 列表
+    ctx.bots // BotInfo[]
+
+    // 当前 bot 的 QQ 号
+    ctx.self_id // number
 
     // 机器人信息
     ctx.bot.uin // QQ 号
@@ -67,10 +73,41 @@ export default definePlugin({
     // 日志器
     ctx.logger // 插件专属日志器
 
+    // 消息去重器
+    ctx.deduplicator // MessageDeduplicator
+
     // 配置信息
     ctx.botConfig // 框架配置
     ctx.isOwner(event) // 检查是否为主人
     ctx.isAdmin(event) // 检查是否为管理员
+  },
+})
+```
+
+### 多实例支持
+
+当配置了多个 NapCat 实例时，上下文对象会提供额外的能力：
+
+```ts
+export default definePlugin({
+  name: 'multi-bot',
+  setup(ctx) {
+    // 获取所有 bot 信息
+    ctx.bots.forEach((botInfo) => {
+      ctx.logger.info(`Bot: ${botInfo.nickname} (${botInfo.user_id})`)
+    })
+
+    // 遍历所有群
+    for (const botInfo of ctx.bots) {
+      const groups = botInfo.napcat.getGroupList()
+      ctx.logger.info(`${botInfo.name}: ${groups.length} 个群`)
+    }
+
+    // 消息去重器（自动处理同群多 bot 重复消息）
+    ctx.handle('message.group', async (event) => {
+      // 不需要手动去重，框架已自动处理
+      ctx.logger.info(`收到群 ${event.group_id} 的消息`)
+    })
   },
 })
 ```
