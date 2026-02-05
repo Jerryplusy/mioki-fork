@@ -17,21 +17,19 @@ export interface StartOptions {
   cwd?: string
 }
 
-export interface BotInfo {
-  napcat: NapCat
+export interface ExtendedNapCat extends NapCat {
   bot_id: number
-  nickname: string
   app_name: string
   app_version: string
   name?: string
 }
 
-export const connectedBots: Map<number, BotInfo> = new Map()
+export const connectedBots: Map<number, ExtendedNapCat> = new Map()
 
 async function connectBot(
   config: cfg.NapcatInstanceConfig,
   index: number,
-): Promise<BotInfo | null> {
+): Promise<ExtendedNapCat | null> {
   const { protocol = 'ws', port = 3001, host = 'localhost', token = '', name } = config
   const botName = name || `Bot${index + 1}`
   const wsUrl = colors.green(`${protocol}://${host}:${port}${token ? '?access_token=***' : ''}`)
@@ -63,15 +61,13 @@ async function connectBot(
         resolve(null)
         return
       }
+      const extendedNapCat = napcat as ExtendedNapCat
+      extendedNapCat.bot_id = user_id
+      extendedNapCat.app_name = app_name
+      extendedNapCat.app_version = app_version
+      extendedNapCat.name = botName
 
-      resolve({
-        napcat,
-        bot_id: user_id,
-        nickname,
-        app_name,
-        app_version,
-        name: botName,
-      })
+      resolve(extendedNapCat)
     })
 
     napcat.run().catch((err) => {
@@ -81,9 +77,9 @@ async function connectBot(
   })
 }
 
-async function setupPlugins(napcat: NapCat, bots: BotInfo[]): Promise<void> {
+async function setupPlugins(napcat: NapCat, bots: ExtendedNapCat[]): Promise<void> {
   const plugin_dir = getAbsPluginDir()
-  const mainBot = bots[0]?.napcat || napcat
+  const mainBot = bots[0] || napcat
 
   ensurePluginDir()
 
@@ -257,7 +253,7 @@ export async function start(options: StartOptions = {}): Promise<void> {
     napcatConfigs.map((config, index) => connectBot(config, index)),
   )
 
-  const bots = connectedBotResults.filter((b): b is BotInfo => b !== null)
+  const bots = connectedBotResults.filter((b): b is ExtendedNapCat => b !== null)
 
   for (const bot of bots) {
     connectedBots.set(bot.bot_id, bot)
@@ -276,17 +272,15 @@ export async function start(options: StartOptions = {}): Promise<void> {
   logger.info(colors.green(`成功连接 ${bots.length} 个实例: ${botNames}`))
   logger.info(colors.dim('='.repeat(40)))
 
-  const mainBot = bots[0].napcat
+  const mainBot = bots[0]
   process.title = `mioki v${version} ${bots.map((b) => `${b.bot_id}`).join(', ')}`
 
   let lastNoticeTime = 0
 
-  for (const botInfo of bots) {
-    const { napcat } = botInfo
-
+  for (const bot of bots) {
     process.on('uncaughtException', async (err: any) => {
       const msg = utils.stringifyError(err)
-      napcat.logger.error(`uncaughtException, 出错了: ${msg}`)
+      bot.logger.error(`uncaughtException, 出错了: ${msg}`)
 
       if (cfg.botConfig.error_push) {
         if (Date.now() - lastNoticeTime < 1_000) return
@@ -299,7 +293,7 @@ export async function start(options: StartOptions = {}): Promise<void> {
 
     process.on('unhandledRejection', async (err: any) => {
       const msg = utils.stringifyError(err)
-      napcat.logger.error(`unhandledRejection, 出错了: ${msg}`)
+      bot.logger.error(`unhandledRejection, 出错了: ${msg}`)
 
       if (cfg.botConfig.error_push) {
         if (Date.now() - lastNoticeTime < 1_000) return

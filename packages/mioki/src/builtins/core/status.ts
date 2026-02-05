@@ -6,7 +6,7 @@ import { findLocalPlugins, runtimePlugins } from '../../plugin'
 import { prettyMs, filesize, localNum, systemInfo } from '../..'
 
 import type { NapCat } from 'napcat-sdk'
-import type { BotInfo } from '../../start'
+import type { ExtendedNapCat } from '../../start'
 
 export const SystemMap: Record<string, string> = {
   Linux: 'Linux',
@@ -75,7 +75,7 @@ export interface MiokiStatus {
   }
 }
 
-export async function getMiokiStatus(bots: BotInfo[]): Promise<MiokiStatus> {
+export async function getMiokiStatus(bots: ExtendedNapCat[]): Promise<MiokiStatus> {
   const osType = os.type()
   const osArch = os.arch()
   const isInUnix = ['Linux', 'Darwin'].includes(osType)
@@ -105,8 +105,7 @@ export async function getMiokiStatus(bots: BotInfo[]): Promise<MiokiStatus> {
   let totalReceive = 0
   let mainVersionInfo = { app_version: 'unknown', protocol_version: 'unknown' }
 
-  for (const botInfo of bots) {
-    const { napcat: bot, user_id, nickname, name } = botInfo
+  for (const bot of bots) {
     try {
       const [versionInfo, friendList, groupList] = await Promise.all([
         bot.getVersionInfo(),
@@ -117,9 +116,9 @@ export async function getMiokiStatus(bots: BotInfo[]): Promise<MiokiStatus> {
       mainVersionInfo = versionInfo
 
       botStatuses.push({
-        uin: user_id,
-        nickname,
-        name,
+        uin: bot.bot_id,
+        nickname: bot.nickname,
+        name: bot.name,
         friends: friendList.length,
         groups: groupList.length,
         send: bot.stat.send.group + bot.stat.send.private,
@@ -130,9 +129,9 @@ export async function getMiokiStatus(bots: BotInfo[]): Promise<MiokiStatus> {
       totalReceive += bot.stat.recv.group + bot.stat.recv.private
     } catch (err) {
       botStatuses.push({
-        uin: user_id,
-        nickname,
-        name,
+        uin: bot.bot_id,
+        nickname: bot.nickname,
+        name: bot.name,
         friends: 0,
         groups: 0,
         send: 0,

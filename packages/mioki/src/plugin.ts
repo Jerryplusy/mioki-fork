@@ -13,7 +13,7 @@ import { logger as miokiLogger } from './logger'
 import type { EventMap, Logger, NapCat, GroupMessageEvent, PrivateMessageEvent } from 'napcat-sdk'
 import type { ScheduledTask, TaskContext } from 'node-cron'
 import type { ConsolaInstance } from 'consola/core'
-import type { BotInfo } from './start'
+import type { ExtendedNapCat } from './start'
 
 type Num = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
@@ -98,7 +98,7 @@ export interface MiokiContext extends Services, Configs, Utils, RemoveBotParam<A
   /** 当前处理事件的机器人实例 */
   bot: NapCat
   /** 所有已连接的机器人实例列表 */
-  bots: BotInfo[]
+  bots: ExtendedNapCat[]
   /** 当前机器人 QQ 号 */
   self_id: number
   /** 消息构造器 */
@@ -209,7 +209,7 @@ export function getAbsPluginDir(defaultDir: string = 'plugins'): string {
 }
 
 export async function enablePlugin(
-  bots: BotInfo[],
+  bots: ExtendedNapCat[],
   plugin: MiokiPlugin,
   type: 'builtin' | 'external' = 'external',
 ): Promise<MiokiPlugin> {
@@ -217,7 +217,7 @@ export async function enablePlugin(
   const pluginName = plugin.name || 'null'
   const { name = pluginName, version = 'null', description = '-', setup = () => {} } = plugin
 
-  const mainBot = bots[0]?.napcat
+  const mainBot = bots[0]
   if (!mainBot) {
     throw new Error('没有可用的 bot 实例')
   }
@@ -232,13 +232,11 @@ export async function enablePlugin(
     })
 
     // 为每个 bot 创建上下文
-    const createContext = (botInfo: BotInfo): MiokiContext => {
-      const { napcat: bot, user_id: self_id } = botInfo
-
+    const createContext = (bot: ExtendedNapCat): MiokiContext => {
       return {
         bot,
         bots,
-        self_id,
+        self_id: bot.bot_id,
         segment: bot.segment,
         getCookie: bot.getCookie.bind(bot),
         ...utilsExports,
@@ -262,13 +260,13 @@ export async function enablePlugin(
           // 为每个 bot 注册事件处理器
           const unsubscribes: (() => void)[] = []
 
-          for (const info of bots) {
+          for (const bot of bots) {
             const wrappedHandler = (event: EventMap[EventName]) => {
               if (isMessageEvent(event)) {
                 const messageEvent = event as GroupMessageEvent | PrivateMessageEvent
 
                 if (isPrivateMessageEvent(messageEvent)) {
-                  if (messageEvent.self_id !== info.bot_id) {
+                  if (messageEvent.self_id !== bot.bot_id) {
                     return // 不是发给这个 bot 的，跳过
                   }
                 }
@@ -284,15 +282,15 @@ export async function enablePlugin(
               }
 
               // 创建当前 bot 的上下文并调用 handler
-              const ctx = createContext(info)
+              const ctx = createContext(bot)
               handler(event as any)
             }
 
-            info.napcat.on(eventName, wrappedHandler)
+            bot.on(eventName, wrappedHandler)
 
             const unsubscribe = () => {
               logger.debug(`Unregistering event handler for event: ${String(eventName)}`)
-              info.napcat.off(eventName, wrappedHandler)
+              bot.off(eventName, wrappedHandler)
             }
 
             unsubscribes.push(unsubscribe)
@@ -308,7 +306,7 @@ export async function enablePlugin(
         },
         cron: (cronExpression, handler) => {
           logger.debug(`Scheduling cron job: ${cronExpression}`)
-          const job = nodeCron.schedule(cronExpression, (now) => handler(createContext(botInfo), now))
+          const job = nodeCron.schedule(cronExpression, (now) => handler(createContext(bot), now))
 
           const clear = () => {
             logger.debug(`Stopping cron job: ${cronExpression}`)

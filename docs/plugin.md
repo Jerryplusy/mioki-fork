@@ -58,7 +58,7 @@ export default definePlugin({
     ctx.bot // NapCat 实例
 
     // 所有已连接的 bot 列表
-    ctx.bots // BotInfo[]
+    ctx.bots // ExtendedNapCat[]
 
     // 当前 bot 的 QQ 号
     ctx.self_id // number
@@ -94,14 +94,18 @@ export default definePlugin({
   name: 'multi-bot',
   setup(ctx) {
     // 获取所有 bot 信息
-    ctx.bots.forEach((botInfo) => {
-      ctx.logger.info(`Bot: ${botInfo.nickname} (${botInfo.user_id})`)
+    ctx.bots.forEach((bot) => {
+      ctx.logger.info(`Bot: ${bot.nickname} (${bot.bot_id})`)
+      ctx.logger.info(`App: ${bot.app_name} v${bot.app_version}`)
+      if (bot.name) {
+        ctx.logger.info(`Name: ${bot.name}`)
+      }
     })
 
     // 遍历所有群
-    for (const botInfo of ctx.bots) {
-      const groups = botInfo.napcat.getGroupList()
-      ctx.logger.info(`${botInfo.name}: ${groups.length} 个群`)
+    for (const bot of ctx.bots) {
+      const groups = await bot.getGroupList()
+      ctx.logger.info(`${bot.name || bot.nickname}: ${groups.length} 个群`)
     }
   },
 })

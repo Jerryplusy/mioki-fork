@@ -80,9 +80,12 @@ await ctx.bot.sendPrivateMsg(user_id, message)
 所有已连接的 NapCat 实例。
 
 ```ts
-ctx.bots[0].napcat //获取某个实例及方法（同 ctx.bot）
-ctx.bots[0].nickname // 某个实例的昵称
+ctx.bots[0] // 获取第一个 NapCat 实例
 ctx.bots[0].bot_id // 某个实例的 QQ 号
+ctx.bots[0].app_name // 某个实例的应用名称
+ctx.bots[0].app_version // 某个实例的应用版本
+ctx.bots[0].name // 某个实例的自定义名称
+ctx.bots[0].sendGroupMsg(group_id, message) // 使用某个实例发送群消息
 ```
 
 ### ctx.segment
